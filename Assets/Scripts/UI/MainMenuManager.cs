@@ -22,6 +22,9 @@ public class MainMenuManager : MonoBehaviour
     [Header("Start")]
     public Button btnStart;
 
+    [Header("Exit")]
+    public Button btnQuit;
+
     [Header("Visuals")]
     public Image singlePlayerHighlight;
     public Image multiPlayerHighlight;
@@ -47,6 +50,8 @@ public class MainMenuManager : MonoBehaviour
             btnCountPlus.onClick.AddListener(IncrementCount);
         if (btnStart != null)
             btnStart.onClick.AddListener(StartGame);
+        if (btnQuit != null)
+            btnQuit.onClick.AddListener(QuitGame);
 
         SelectMode(GameConfig.GameMode.SinglePlayer);
         UpdateCountLabel();
@@ -64,6 +69,8 @@ public class MainMenuManager : MonoBehaviour
             btnCountPlus = FindButton("BtnPlus");
         if (btnStart == null)
             btnStart = FindButton("BtnStart");
+        if (btnQuit == null)
+            btnQuit = FindButton("BtnQuit");
 
         if (playerCountLabel == null)
         {
@@ -118,5 +125,14 @@ public class MainMenuManager : MonoBehaviour
         GameConfig.HumanPlayerIndex  = 0;
 
         SceneManager.LoadScene("GameScene");
+    }
+
+    void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }

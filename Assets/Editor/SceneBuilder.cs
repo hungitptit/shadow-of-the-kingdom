@@ -21,6 +21,7 @@ public static class SceneBuilder
     static readonly Color BTN_HIDDEN    = new Color(0.3f, 0.1f, 0.5f, 1f);
     static readonly Color BTN_REVEAL    = new Color(0.5f, 0.4f, 0.0f, 1f);
     static readonly Color BTN_ACTIVATE  = new Color(0.6f, 0.2f, 0.4f, 1f);
+    static readonly Color BTN_MAINMENU  = new Color(0.15f, 0.35f, 0.55f, 1f);
     static readonly Color TEXT_GOLD     = new Color(0.95f, 0.8f, 0.3f, 1f);
     static readonly Color TEXT_WHITE    = Color.white;
     static readonly Color TEXT_DIM      = new Color(0.7f, 0.7f, 0.7f, 1f);
@@ -87,6 +88,9 @@ public static class SceneBuilder
 
         var roundTxt = CreateTMPText(topBar, "RoundText", "Vòng 1", 24, TEXT_WHITE, TextAlignmentOptions.Center);
         SetAnchored(roundTxt, new Vector2(0.35f, 0), new Vector2(0.65f, 1), Vector2.zero, Vector2.zero);
+
+        var btnTopMainMenu = CreateButton(topBar, "TopBarMainMenuButton", "Main Menu", BTN_MAINMENU);
+        SetAnchored(btnTopMainMenu, new Vector2(0.80f, 0.1f), new Vector2(0.995f, 0.9f), Vector2.zero, Vector2.zero);
 
         // ── Current Player Info Panel (left, upper) ──────────────
         var infoPanel = CreateImage(canvasGO, "InfoPanel", PANEL_BG);
@@ -267,8 +271,11 @@ public static class SceneBuilder
         SetAnchored(goTxt, new Vector2(0.2f, 0.4f), new Vector2(0.8f, 0.7f), Vector2.zero, Vector2.zero);
 
         var goRestartBtn = CreateButton(goPanel, "RestartButton", "Ván mới", BTN_ENDTURN);
-        SetAnchored(goRestartBtn, new Vector2(0.35f, 0.28f), new Vector2(0.65f, 0.38f), Vector2.zero, Vector2.zero);
+        SetAnchored(goRestartBtn, new Vector2(0.35f, 0.28f), new Vector2(0.55f, 0.38f), Vector2.zero, Vector2.zero);
         goRestartBtn.AddComponent<RestartButton>();
+
+        var goMainMenuBtn = CreateButton(goPanel, "GameOverMainMenuButton", "Về Main Menu", BTN_MAINMENU);
+        SetAnchored(goMainMenuBtn, new Vector2(0.35f, 0.16f), new Vector2(0.55f, 0.26f), Vector2.zero, Vector2.zero);
 
         // ── Wire up GameManager & UIManager ──────────────────────
         GameManager gm = Object.FindObjectOfType<GameManager>();

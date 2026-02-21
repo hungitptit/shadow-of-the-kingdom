@@ -19,6 +19,7 @@ public static class MainMenuBuilder
     static readonly Color BTN_MP       = new Color(0.15f, 0.25f, 0.55f, 1f);  // multi player blue
     static readonly Color BTN_START    = new Color(0.6f, 0.40f, 0.05f, 1f);   // gold start
     static readonly Color BTN_COUNT    = new Color(0.25f, 0.20f, 0.35f, 1f);
+    static readonly Color BTN_QUIT     = new Color(0.45f, 0.10f, 0.10f, 1f);  // quit red
     static readonly Color TEXT_GOLD    = new Color(0.95f, 0.80f, 0.30f, 1f);
     static readonly Color TEXT_WHITE   = Color.white;
     static readonly Color TEXT_DIM     = new Color(0.7f, 0.7f, 0.7f, 1f);
@@ -110,9 +111,12 @@ public static class MainMenuBuilder
 
         // ── Start button ──────────────────────────────────────────
         var btnStart = CreateButton(card, "BtnStart", "▶   BẮT ĐẦU VÁN CHƠI", BTN_START, 26);
-        SetAnchor(btnStart, new Vector2(0.10f, 0.02f), new Vector2(0.90f, 0.10f));
-        // Make start button more prominent
+        SetAnchor(btnStart, new Vector2(0.10f, 0.07f), new Vector2(0.90f, 0.15f));
         btnStart.GetComponent<Image>().color = BTN_START;
+
+        // ── Quit button ───────────────────────────────────────────
+        var btnQuit = CreateButton(card, "BtnQuit", "✕   THOÁT GAME", BTN_QUIT, 20);
+        SetAnchor(btnQuit, new Vector2(0.25f, 0.01f), new Vector2(0.75f, 0.06f));
 
         // ── Wire MainMenuManager ──────────────────────────────────
         var mmGO = new GameObject("MainMenuManager");
@@ -124,6 +128,7 @@ public static class MainMenuBuilder
         mm.btnCountMinus     = btnMinus.GetComponent<Button>();
         mm.btnCountPlus      = btnPlus.GetComponent<Button>();
         mm.btnStart          = btnStart.GetComponent<Button>();
+        mm.btnQuit           = btnQuit.GetComponent<Button>();
         mm.singlePlayerHighlight = btnSP.GetComponent<Image>();
         mm.multiPlayerHighlight  = btnMP.GetComponent<Image>();
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
@@ -44,6 +45,9 @@ public class UIManager : MonoBehaviour
     [Header("Target Info")]
     public TextMeshProUGUI targetInfoText;
 
+    [Header("Navigation Buttons")]
+    public Button mainMenuButton;
+
     void Start()
     {
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
@@ -61,6 +65,9 @@ public class UIManager : MonoBehaviour
             revealRoleButton.onClick.AddListener(() => GameManager.Instance.RevealCurrentPlayerRole());
         if (drawCardButton != null)
             drawCardButton.onClick.AddListener(() => GameManager.Instance.DrawCard());
+
+        // Navigation buttons — wired by name if not assigned in Inspector
+        WireNavButtons();
 
         // Wire peek close button — find by name since it's inside the overlay
         Button peekCloseBtn = null;
@@ -82,6 +89,34 @@ public class UIManager : MonoBehaviour
             peekCloseBtn.onClick.RemoveAllListeners();
             peekCloseBtn.onClick.AddListener(HidePeekOverlay);
         }
+    }
+
+    void WireNavButtons()
+    {
+        if (mainMenuButton == null)
+        {
+            var go = GameObject.Find("TopBarMainMenuButton");
+            if (go != null) mainMenuButton = go.GetComponent<Button>();
+        }
+
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.onClick.RemoveAllListeners();
+            mainMenuButton.onClick.AddListener(GoToMainMenu);
+        }
+
+        // GameOver panel Main Menu button
+        var goMainMenuGO = GameObject.Find("GameOverMainMenuButton");
+        if (goMainMenuGO != null)
+        {
+            var btn = goMainMenuGO.GetComponent<Button>();
+            if (btn != null) btn.onClick.AddListener(GoToMainMenu);
+        }
+    }
+
+    void GoToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void RefreshCurrentPlayer(Player player, int round)
