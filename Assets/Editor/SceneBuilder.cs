@@ -312,6 +312,13 @@ public static class SceneBuilder
             if (cardPrefabAsset != null)
                 ui.cardUIPrefab = cardPrefabAsset;
 
+            // Wire mặt sau lá bài (general.png)
+            Sprite cardBack = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/roles/general.png");
+            if (cardBack != null)
+                ui.cardBackSprite = cardBack;
+            else
+                Debug.LogWarning("[SceneBuilder] Không tìm thấy Assets/Sprites/roles/general.png cho cardBackSprite.");
+
             EditorUtility.SetDirty(ui);
         }
 

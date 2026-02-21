@@ -37,6 +37,7 @@ public class UIManager : MonoBehaviour
     public Transform handContainer;        // HorizontalLayoutGroup parent for card slots
     public GameObject cardUIPrefab;        // CardUI prefab
     public TextMeshProUGUI deckCountText;  // "Deck: XX"
+    public Sprite cardBackSprite;          // Mặt sau lá bài (roles/general.png)
 
     [Header("Peek Overlay")]
     public GameObject peekOverlay;         // Panel shown by ActionFortune
@@ -194,13 +195,29 @@ public class UIManager : MonoBehaviour
         foreach (Transform child in handContainer)
             Destroy(child.gameObject);
 
-        // Spawn one CardUI per card in hand
+        // Người chơi human luôn thấy mặt trước bài của mình.
+        // Current player là AI hoặc người khác → hiện mặt sau.
+        bool isHumanOwner = GameManager.Instance.IsCurrentPlayerHuman;
+
         foreach (CardData card in player.hand)
         {
             GameObject go = Object.Instantiate(cardUIPrefab, handContainer);
             CardUI ui = go.GetComponent<CardUI>();
-            ui?.Setup(card);
+            if (ui == null) continue;
+
+            if (isHumanOwner)
+                ui.Setup(card);
+            else
+                ui.SetupFaceDown(GetCardBack());
         }
+    }
+
+    Sprite GetCardBack()
+    {
+        if (cardBackSprite != null) return cardBackSprite;
+        // Fallback: tải từ Resources nếu chưa assign trong Inspector
+        cardBackSprite = Resources.Load<Sprite>("Sprites/roles/general");
+        return cardBackSprite;
     }
 
     public void ShowPeekCards(List<CardData> cards)

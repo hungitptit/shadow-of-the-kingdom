@@ -88,6 +88,56 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         if (selectedGlow != null) selectedGlow.SetActive(false);
     }
 
+    /// <summary>
+    /// Hiển thị mặt sau lá bài (dùng cho bài của người chơi khác).
+    /// Ảnh mặt sau phủ toàn bộ card, ẩn tất cả thông tin, không cho click.
+    /// </summary>
+    public void SetupFaceDown(Sprite cardBackSprite)
+    {
+        _card = null;
+
+        // Ẩn type bar (GameObject)
+        if (typeColorBar != null)
+            typeColorBar.gameObject.SetActive(false);
+
+        // Ẩn cost badge (GameObject cha)
+        if (costText != null)
+            costText.transform.parent.gameObject.SetActive(false);
+
+        // Ẩn description
+        if (descriptionText != null)
+            descriptionText.gameObject.SetActive(false);
+
+        // Ẩn type label
+        var typeLabelGO = transform.Find("TypeLabel");
+        if (typeLabelGO != null)
+            typeLabelGO.gameObject.SetActive(false);
+
+        // Stretch artwork phủ toàn bộ card
+        if (artworkImage != null)
+        {
+            artworkImage.sprite        = cardBackSprite;
+            artworkImage.color         = Color.white;
+            artworkImage.preserveAspect = false;
+
+            var rt = artworkImage.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        // Không cho click, không glow
+        Button btn = GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.interactable = false;
+        }
+
+        if (selectedGlow != null) selectedGlow.SetActive(false);
+    }
+
     void OnClick()
     {
         if (_card == null) return;
