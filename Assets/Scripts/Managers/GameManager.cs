@@ -336,6 +336,14 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // Luật: không thể tấn công Hoàng đế khi còn ít nhất 1 thành viên phe Hoàng đế khác còn sống
+        if (target.role?.roleType == RoleType.Emperor && IsEmperorShielded())
+        {
+            LogEvent("Không thể tấn công Hoàng đế — còn thành viên phe Hoàng đế chưa bị hạ!");
+            // Hoàn trả stamina vì chưa trừ
+            return;
+        }
+
         attacker.stamina -= 3;
         attacker.hasAttackedThisTurn = true;
 
@@ -637,6 +645,18 @@ public class GameManager : MonoBehaviour
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns true nếu còn ít nhất 1 thành viên phe Hoàng đế (không phải Hoàng đế) còn sống.
+    /// Khi đó Hoàng đế được "che chắn" và không thể bị tấn công trực tiếp.
+    /// </summary>
+    public bool IsEmperorShielded()
+    {
+        return players.Any(p =>
+            p.isAlive &&
+            p.role?.faction == Faction.Emperor &&
+            p.role?.roleType != RoleType.Emperor);
+    }
 
     public static string GetRoleName(RoleType rt)
     {

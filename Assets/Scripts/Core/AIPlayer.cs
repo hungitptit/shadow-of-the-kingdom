@@ -83,7 +83,8 @@ public class AIPlayer
         // Only place if we have enough stamina to activate next round (need 5 later)
         if (self.stamina < 2) return;
 
-        Player target = FindBestAttackTarget();
+        // Hidden action can target Emperor even when shielded
+        Player target = FindBestHiddenPlaceTarget();
         if (target == null) return;
 
         // Don't place hidden on same target we already placed one on
@@ -128,10 +129,12 @@ public class AIPlayer
 
     // ── TARGET SELECTION ──────────────────────────────────────────
 
+    // Target cho đòn đánh thường — không được nhắm Hoàng đế khi còn shield
     Player FindBestAttackTarget()
     {
         List<Player> candidates = gm.AlivePlayers()
             .Where(p => p != self)
+            .Where(p => !(p.role?.roleType == RoleType.Emperor && gm.IsEmperorShielded()))
             .ToList();
 
         if (candidates.Count == 0) return null;
@@ -141,6 +144,23 @@ public class AIPlayer
         // Sort priority: highest threat first
         return candidates
             .OrderByDescending(p => ThreatScore(p, myFaction))
+            .FirstOrDefault();
+    }
+
+    // Target để đặt hidden action — Hoàng đế vẫn hợp lệ dù còn shield
+    Player FindBestHiddenPlaceTarget()
+    {
+        List<Player> candidates = gm.AlivePlayers()
+            .Where(p => p != self)
+            .ToList();
+
+        if (candidates.Count == 0) return null;
+
+        bool alreadyPlaced(Player p) => p.hiddenActionsOnMe.Any(a => a.owner == self);
+
+        return candidates
+            .Where(p => !alreadyPlaced(p))
+            .OrderByDescending(p => ThreatScore(p, self.role?.faction ?? Faction.Neutral))
             .FirstOrDefault();
     }
 
