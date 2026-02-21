@@ -15,8 +15,18 @@ public class Player
     // Runtime stats (base + card/role modifiers)
     public int hp;
     public int stamina;
+    public int maxStamina;  // can be boosted by Thuoc bo item, locked by Oan linh
     public int attack;
     public int defense;
+
+    // ── Status effects ────────────────────────────
+    public int poisonRoundsLeft = 0;        // Thuoc doc: -1 HP per round
+    public bool isStaminaLocked = false;    // Oan linh: max stamina locked at 2
+    public bool hasCounter = false;         // Phan don: reflect next attack
+    public bool fleeActive = false;         // Chay giac: immune to Invasion event this round
+
+    // ── Items equipped (persistent) ───────────────
+    public List<CardData> equippedItems = new List<CardData>();
 
     public bool isAlive = true;
     public bool isRevealed = false;
@@ -36,6 +46,10 @@ public class Player
     // Guard: can only intervene once per game
     public bool guardHasIntervened = false;
 
+    // Card hand (max 5)
+    public List<CardData> hand = new();
+    public const int MaxHandSize = 5;
+
     // HiddenActions placed ON this player by others
     public List<HiddenAction> hiddenActionsOnMe = new();
 
@@ -52,6 +66,7 @@ public class Player
     {
         hp = baseHp;
         stamina = baseStamina;
+        maxStamina = baseStamina;
         attack = baseAttack;
         defense = baseDefense;
     }

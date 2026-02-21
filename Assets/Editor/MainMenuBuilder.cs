@@ -132,27 +132,40 @@ public static class MainMenuBuilder
         // Save scene
         EditorSceneManager.SaveScene(scene, scenePath);
 
-        // Add both scenes to build settings
-        AddSceneToBuild(scenePath);
-        AddSceneToBuild("Assets/Scenes/GameScene.unity");
+        // Fix build settings order: MainMenu=0, GameScene=1
+        FixBuildSettings();
 
-        Debug.Log("[MainMenuBuilder] MainMenu scene created at " + scenePath + " and added to Build Settings.");
+        Debug.Log("[MainMenuBuilder] MainMenu scene created at " + scenePath + ". Build Settings: MainMenu=0, GameScene=1.");
+    }
+
+    // Ensures MainMenu is index 0 and GameScene is index 1 in Build Settings
+    [MenuItem("Game/Setup/Fix Build Settings")]
+    public static void FixBuildSettings()
+    {
+        const string mainMenuPath = "Assets/Scenes/MainMenu.unity";
+        const string gameScenePath = "Assets/Scenes/GameScene.unity";
+
+        EditorBuildSettings.scenes = new[]
+        {
+            new EditorBuildSettingsScene(mainMenuPath,  true),
+            new EditorBuildSettingsScene(gameScenePath, true),
+        };
+
+        Debug.Log("[MainMenuBuilder] Build Settings fixed: MainMenu=0, GameScene=1.");
     }
 
     static void AddSceneToBuild(string path)
     {
+        // Not used directly anymore — FixBuildSettings handles ordering
+        // Kept for safety: ensure the scene exists in the list
         var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(
             EditorBuildSettings.scenes);
 
-        bool exists = false;
         foreach (var s in scenes)
-            if (s.path == path) { exists = true; break; }
+            if (s.path == path) return;   // already present, do nothing
 
-        if (!exists)
-        {
-            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
+        scenes.Add(new EditorBuildSettingsScene(path, true));
+        EditorBuildSettings.scenes = scenes.ToArray();
     }
 
     // ── Helpers ───────────────────────────────────────────────────

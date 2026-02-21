@@ -30,6 +30,16 @@ public class UIManager : MonoBehaviour
     public Button placeHiddenButton;
     public Button activateHiddenButton;
     public Button revealRoleButton;
+    public Button drawCardButton;
+
+    [Header("Card Hand Area")]
+    public Transform handContainer;        // HorizontalLayoutGroup parent for card slots
+    public GameObject cardUIPrefab;        // CardUI prefab
+    public TextMeshProUGUI deckCountText;  // "Deck: XX"
+
+    [Header("Peek Overlay")]
+    public GameObject peekOverlay;         // Panel shown by ActionFortune
+    public Transform peekContainer;        // 3 card slots inside peek overlay
 
     [Header("Target Info")]
     public TextMeshProUGUI targetInfoText;
@@ -49,6 +59,29 @@ public class UIManager : MonoBehaviour
             activateHiddenButton.onClick.AddListener(() => GameManager.Instance.ActivateHiddenAction());
         if (revealRoleButton != null)
             revealRoleButton.onClick.AddListener(() => GameManager.Instance.RevealCurrentPlayerRole());
+        if (drawCardButton != null)
+            drawCardButton.onClick.AddListener(() => GameManager.Instance.DrawCard());
+
+        // Wire peek close button — find by name since it's inside the overlay
+        Button peekCloseBtn = null;
+        if (peekOverlay != null)
+        {
+            peekOverlay.SetActive(false);
+            var peekCloseBtnGO = peekOverlay.transform.Find("PeekCloseButton");
+            if (peekCloseBtnGO != null)
+                peekCloseBtn = peekCloseBtnGO.GetComponent<Button>();
+        }
+        // Fallback: search whole scene
+        if (peekCloseBtn == null)
+        {
+            var go = GameObject.Find("PeekCloseButton");
+            if (go != null) peekCloseBtn = go.GetComponent<Button>();
+        }
+        if (peekCloseBtn != null)
+        {
+            peekCloseBtn.onClick.RemoveAllListeners();
+            peekCloseBtn.onClick.AddListener(HidePeekOverlay);
+        }
     }
 
     public void RefreshCurrentPlayer(Player player, int round)
@@ -106,6 +139,55 @@ public class UIManager : MonoBehaviour
             revealRoleButton.interactable = isPlaying && isHumanTurn && !player.isRevealed;
         if (endTurnButton != null)
             endTurnButton.interactable = isPlaying && isHumanTurn;
+        if (drawCardButton != null)
+            drawCardButton.interactable = isPlaying && isHumanTurn && !player.hasDrawnThisTurn
+                                          && player.hand.Count < Player.MaxHandSize;
+
+        // Refresh hand display
+        RefreshHand(player);
+
+        // Deck count
+        if (deckCountText != null && DeckManager.Instance != null)
+            deckCountText.text = $"Deck: {DeckManager.Instance.DrawPileCount}";
+    }
+
+    void RefreshHand(Player player)
+    {
+        if (handContainer == null || cardUIPrefab == null) return;
+
+        // Clear existing
+        foreach (Transform child in handContainer)
+            Destroy(child.gameObject);
+
+        // Spawn one CardUI per card in hand
+        foreach (CardData card in player.hand)
+        {
+            GameObject go = Object.Instantiate(cardUIPrefab, handContainer);
+            CardUI ui = go.GetComponent<CardUI>();
+            ui?.Setup(card);
+        }
+    }
+
+    public void ShowPeekCards(List<CardData> cards)
+    {
+        if (peekOverlay == null) return;
+        peekOverlay.SetActive(true);
+
+        if (peekContainer == null) return;
+        foreach (Transform child in peekContainer) Destroy(child.gameObject);
+
+        foreach (CardData c in cards)
+        {
+            if (cardUIPrefab == null) break;
+            GameObject go = Object.Instantiate(cardUIPrefab, peekContainer);
+            CardUI ui = go.GetComponent<CardUI>();
+            ui?.Setup(c);
+        }
+    }
+
+    public void HidePeekOverlay()
+    {
+        if (peekOverlay != null) peekOverlay.SetActive(false);
     }
 
     public void HighlightTarget(int targetIndex)

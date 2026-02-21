@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 /// <summary>
 /// Builds the full professional card-game UI layout in GameScene.
@@ -65,13 +66,15 @@ public static class SceneBuilder
         var bgGO = CreateImage(canvasGO, "Background", BG_DARK);
         StretchFull(bgGO);
 
-        // Layout constants (all in anchor ratios, no mixed pixel offsets for panels)
-        // Left column:  x 0.00 → 0.15
-        // Center area:  x 0.15 → 0.79
-        // Right column: x 0.79 → 1.00
-        // Top bar:      y 0.94 → 1.00  (≈60px at 1080p)
-        // Button panel: y 0.00 → 0.37
-        // Info panel:   y 0.37 → 0.94
+        // Layout constants (all in anchor ratios)
+        // Left column:      x 0.00 → 0.15
+        // Center area:      x 0.15 → 0.79
+        //   Player panels:  y 0.00 → 0.28  (taller panels)
+        //   Hand area:      y 0.28 → 0.62  (tall enough for card art)
+        //   Deck/discard:   y 0.62 → 0.74
+        //   Empty/upper:    y 0.74 → 0.94
+        // Right column:     x 0.79 → 1.00
+        // Top bar:          y 0.94 → 1.00
 
         // ── Top Bar ──────────────────────────────────────────────
         var topBar = CreateImage(canvasGO, "TopBar", PANEL_BG);
@@ -148,19 +151,98 @@ public static class SceneBuilder
         var btnEnd = CreateButton(btnPanel, "EndTurnButton", "Kết thúc lượt", BTN_ENDTURN);
         SetAnchored(btnEnd, new Vector2(0.04f, 0f), new Vector2(0.96f, 0.162f), new Vector2(0, 3), new Vector2(0, -3));
 
-        // ── Player Panels Area (center bottom, x=15%→79%, y=0→37%) ──
+        // ── Player Panels Area (center bottom, y=0→28%) ──────────
         var panelContainer = new GameObject("PlayerPanelContainer");
         panelContainer.transform.SetParent(canvasGO.transform, false);
         panelContainer.AddComponent<RectTransform>();
         SetAnchored(panelContainer,
-            new Vector2(0.15f, 0f), new Vector2(0.79f, 0.37f),
+            new Vector2(0.15f, 0f), new Vector2(0.79f, 0.28f),
             new Vector2(4, 4), new Vector2(-4, -4));
 
         var hlg = panelContainer.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 12;
-        hlg.childForceExpandWidth = true;
+        hlg.spacing = 8;
+        hlg.childForceExpandWidth = false;
         hlg.childForceExpandHeight = true;
-        hlg.padding = new RectOffset(8, 8, 8, 8);
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.padding = new RectOffset(6, 6, 6, 6);
+
+        // ── Hand Area (center, y=28%→62%) ─────────────────────────
+        var handArea = CreateImage(canvasGO, "HandArea", new Color(0.05f, 0.08f, 0.06f, 0.85f));
+        SetAnchored(handArea,
+            new Vector2(0.15f, 0.28f), new Vector2(0.79f, 0.62f),
+            new Vector2(4, 4), new Vector2(-4, -4));
+        AddOutline(handArea, PANEL_BORDER);
+
+        var handTitle = CreateTMPText(handArea, "HandTitle", "Bài trên Tay", 16, TEXT_GOLD, TextAlignmentOptions.Left);
+        SetAnchored(handTitle, new Vector2(0, 0.88f), new Vector2(0.5f, 1f), new Vector2(10, 0), new Vector2(0, 0));
+
+        var deckCountTxt = CreateTMPText(handArea, "DeckCountText", "Deck: 0", 15, TEXT_DIM, TextAlignmentOptions.Right);
+        SetAnchored(deckCountTxt, new Vector2(0.5f, 0.88f), new Vector2(1f, 1f), new Vector2(0, 0), new Vector2(-10, 0));
+
+        // Card slots container — fills the lower 88% of HandArea
+        var handContainer = new GameObject("HandContainer");
+        handContainer.transform.SetParent(handArea.transform, false);
+        handContainer.AddComponent<RectTransform>();
+        SetAnchored(handContainer, new Vector2(0f, 0f), new Vector2(1f, 0.87f), new Vector2(10, 6), new Vector2(-10, -6));
+        var handHLG = handContainer.AddComponent<HorizontalLayoutGroup>();
+        handHLG.spacing = 10;
+        handHLG.childForceExpandWidth = false;
+        handHLG.childForceExpandHeight = true;
+        handHLG.childAlignment = TextAnchor.MiddleCenter;
+        handHLG.padding = new RectOffset(6, 6, 4, 4);
+
+        // ── Deck / Discard / Draw button (center, y=62%→74%) ──────
+        var deckArea = CreateImage(canvasGO, "DeckArea", PANEL_BG);
+        SetAnchored(deckArea,
+            new Vector2(0.15f, 0.62f), new Vector2(0.79f, 0.74f),
+            new Vector2(4, 4), new Vector2(-4, -4));
+        AddOutline(deckArea, PANEL_BORDER);
+
+        // Deck pile visual (left side)
+        var deckPile = CreateImage(deckArea, "DeckPile", new Color(0.2f, 0.15f, 0.05f));
+        SetAnchored(deckPile, new Vector2(0.02f, 0.08f), new Vector2(0.20f, 0.92f), Vector2.zero, Vector2.zero);
+        var deckPileImg = deckPile.GetComponent<Image>();
+        deckPileImg.color = new Color(0.15f, 0.10f, 0.04f);
+        AddOutline(deckPile, new Color(0.6f, 0.45f, 0.15f));
+
+        var deckLabel = CreateTMPText(deckPile, "DeckLabel", "Bộ bài\n(Sấp)", 13, TEXT_GOLD, TextAlignmentOptions.Center);
+        SetAnchored(deckLabel, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+
+        // Draw button
+        var btnDraw = CreateButton(deckArea, "DrawCardButton", "Bốc bài", new Color(0.1f, 0.4f, 0.55f));
+        SetAnchored(btnDraw, new Vector2(0.22f, 0.15f), new Vector2(0.45f, 0.85f), Vector2.zero, Vector2.zero);
+
+        // Spacer — no second end-turn button needed
+
+        // Discard pile visual (right side)
+        var discardPile = CreateImage(deckArea, "DiscardPile", new Color(0.12f, 0.05f, 0.05f));
+        SetAnchored(discardPile, new Vector2(0.74f, 0.08f), new Vector2(0.98f, 0.92f), Vector2.zero, Vector2.zero);
+        AddOutline(discardPile, new Color(0.5f, 0.2f, 0.1f));
+
+        var discardLabel = CreateTMPText(discardPile, "DiscardLabel", "Bài\nBỏ ra", 13, TEXT_DIM, TextAlignmentOptions.Center);
+        SetAnchored(discardLabel, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+
+        // ── Peek Overlay (full-screen, hidden by default) ─────────
+        var peekOverlay = CreateImage(canvasGO, "PeekOverlay", new Color(0, 0, 0, 0.80f));
+        StretchFull(peekOverlay);
+        peekOverlay.SetActive(false);
+
+        var peekTitle = CreateTMPText(peekOverlay, "PeekTitle", "Thầy bói — 3 lá trên deck:", 24, TEXT_GOLD, TextAlignmentOptions.Center);
+        SetAnchored(peekTitle, new Vector2(0.1f, 0.72f), new Vector2(0.9f, 0.84f), Vector2.zero, Vector2.zero);
+
+        var peekContainer = new GameObject("PeekContainer");
+        peekContainer.transform.SetParent(peekOverlay.transform, false);
+        peekContainer.AddComponent<RectTransform>();
+        SetAnchored(peekContainer, new Vector2(0.2f, 0.40f), new Vector2(0.8f, 0.72f), Vector2.zero, Vector2.zero);
+        var peekHLG = peekContainer.AddComponent<HorizontalLayoutGroup>();
+        peekHLG.spacing = 20;
+        peekHLG.childForceExpandWidth = false;
+        peekHLG.childForceExpandHeight = true;
+        peekHLG.childAlignment = TextAnchor.MiddleCenter;
+
+        var peekClose = CreateButton(peekOverlay, "PeekCloseButton", "Đóng", BTN_ENDTURN);
+        SetAnchored(peekClose, new Vector2(0.4f, 0.30f), new Vector2(0.6f, 0.40f), Vector2.zero, Vector2.zero);
+        // Listener is wired at runtime by UIManager.Start()
 
         // ── Game Log Panel (right column, x=79%→100%, full height) ──
         var logPanel = CreateImage(canvasGO, "LogPanel", LOG_BG);
@@ -211,25 +293,76 @@ public static class SceneBuilder
             ui.activateHiddenButton = btnActivate.GetComponent<Button>();
             ui.revealRoleButton  = btnReveal.GetComponent<Button>();
             ui.targetInfoText    = targetInfoTxt.GetComponent<TextMeshProUGUI>();
+            // Card system
+            ui.drawCardButton    = btnDraw.GetComponent<Button>();
+            ui.handContainer     = handContainer.transform;
+            ui.deckCountText     = deckCountTxt.GetComponent<TextMeshProUGUI>();
+            ui.peekOverlay       = peekOverlay;
+            ui.peekContainer     = peekContainer.transform;
+
+            // Load CardUI prefab if exists
+            GameObject cardPrefabAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/CardUI.prefab");
+            if (cardPrefabAsset != null)
+                ui.cardUIPrefab = cardPrefabAsset;
+
             EditorUtility.SetDirty(ui);
         }
 
         if (gm != null)
         {
             gm.playerPanelContainer = panelContainer.transform;
+
+            // Assign PlayerPanel prefab if it already exists
+            GameObject ppPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerPanel.prefab");
+            if (ppPrefab != null)
+                gm.playerPanelPrefab = ppPrefab;
+
+            // Ensure DeckManager exists in scene
+            DeckManager dm = Object.FindFirstObjectByType<DeckManager>();
+            if (dm == null)
+            {
+                var dmGO = new GameObject("DeckManager");
+                dm = dmGO.AddComponent<DeckManager>();
+            }
+            gm.deckManager = dm;
             EditorUtility.SetDirty(gm);
+            EditorUtility.SetDirty(dm);
         }
+
+        // ── Ensure Main Camera is set up for 2D UI ────────────────
+        var mainCam = Camera.main;
+        if (mainCam == null)
+        {
+            var camGO = new GameObject("Main Camera");
+            camGO.tag = "MainCamera";
+            mainCam = camGO.AddComponent<Camera>();
+            if (camGO.GetComponent<AudioListener>() == null)
+                camGO.AddComponent<AudioListener>();
+        }
+        mainCam.orthographic = true;
+        mainCam.clearFlags = CameraClearFlags.SolidColor;
+        mainCam.backgroundColor = BG_DARK;
+        mainCam.transform.position = new Vector3(0, 0, -10);
+        mainCam.transform.rotation = Quaternion.identity;
+        mainCam.nearClipPlane = 0.1f;
+        mainCam.farClipPlane  = 100f;
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        Debug.Log("[SceneBuilder] UI built and scene saved. Now run 'Game > Setup > Create All Role Assets' then 'Auto-Assign Roles to GameManager'.");
+        Debug.Log("[SceneBuilder] Game UI built and saved. Run: Create All Role Assets -> Auto-Assign Roles -> Create PlayerPanel Prefab -> Create Card UI Prefab -> Auto-Assign Cards.");
     }
 
     // ── Helper: Create PlayerPanel Prefab ────────────────────────
     [MenuItem("Game/Setup/Create PlayerPanel Prefab")]
     public static void CreatePlayerPanelPrefab()
     {
+        // Save to both Prefabs/ (for Inspector) and Resources/Prefabs/ (for runtime fallback)
         string prefabPath = "Assets/Prefabs/PlayerPanel.prefab";
+
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        if (!AssetDatabase.IsValidFolder("Assets/Resources/Prefabs"))
+            AssetDatabase.CreateFolder("Assets/Resources", "Prefabs");
 
         // Root
         var root = new GameObject("PlayerPanel");
@@ -248,36 +381,39 @@ public static class SceneBuilder
         outline.effectColor = new Color(0.5f, 0.35f, 0.1f, 0.8f);
         outline.effectDistance = new Vector2(2, -2);
 
-        // Name label
-        var nameTxt = CreateTMPText(root, "PlayerName", "Player 1", 20, Color.white, TextAlignmentOptions.Center);
-        SetAnchored(nameTxt, new Vector2(0, 0.72f), new Vector2(1, 1), new Vector2(4, 0), new Vector2(-4, -4));
+        // Name label (top 15%)
+        var nameTxt = CreateTMPText(root, "PlayerName", "Player 1", 16, Color.white, TextAlignmentOptions.Center);
+        SetAnchored(nameTxt, new Vector2(0, 0.86f), new Vector2(1, 1f), new Vector2(3, 0), new Vector2(-3, -2));
+        nameTxt.GetComponent<TextMeshProUGUI>().enableWordWrapping = false;
+        nameTxt.GetComponent<TextMeshProUGUI>().overflowMode = TextOverflowModes.Ellipsis;
         ppUI.nameText = nameTxt.GetComponent<TextMeshProUGUI>();
 
-        // Role thumbnail area
+        // Role thumbnail area (left 45%, middle band)
         var roleThumb = CreateImage(root, "RoleCardImage", Color.white);
-        SetAnchored(roleThumb, new Vector2(0.02f, 0.32f), new Vector2(0.42f, 0.72f), Vector2.zero, Vector2.zero);
+        SetAnchored(roleThumb, new Vector2(0.03f, 0.42f), new Vector2(0.48f, 0.85f), Vector2.zero, Vector2.zero);
         roleThumb.GetComponent<Image>().preserveAspect = true;
         roleThumb.SetActive(false);
         ppUI.roleCardImage = roleThumb.GetComponent<Image>();
 
-        // Role name
-        var roleNameTxt = CreateTMPText(root, "RoleNameText", "???", 15, new Color(0.95f, 0.8f, 0.3f), TextAlignmentOptions.Center);
-        SetAnchored(roleNameTxt, new Vector2(0.44f, 0.55f), new Vector2(0.98f, 0.72f), Vector2.zero, Vector2.zero);
+        // Role name (right side, upper middle)
+        var roleNameTxt = CreateTMPText(root, "RoleNameText", "???", 13, new Color(0.95f, 0.8f, 0.3f), TextAlignmentOptions.Center);
+        SetAnchored(roleNameTxt, new Vector2(0.50f, 0.66f), new Vector2(0.98f, 0.85f), Vector2.zero, Vector2.zero);
+        roleNameTxt.GetComponent<TextMeshProUGUI>().enableWordWrapping = true;
         ppUI.roleNameText = roleNameTxt.GetComponent<TextMeshProUGUI>();
 
-        // HP
-        var hpT = CreateTMPText(root, "HpText", "HP 4", 17, new Color(1, 0.3f, 0.3f), TextAlignmentOptions.Left);
-        SetAnchored(hpT, new Vector2(0.02f, 0.42f), new Vector2(0.5f, 0.56f), Vector2.zero, Vector2.zero);
+        // HP (left of middle row)
+        var hpT = CreateTMPText(root, "HpText", "HP 4", 14, new Color(1, 0.35f, 0.35f), TextAlignmentOptions.Center);
+        SetAnchored(hpT, new Vector2(0.02f, 0.50f), new Vector2(0.50f, 0.66f), Vector2.zero, Vector2.zero);
         ppUI.hpText = hpT.GetComponent<TextMeshProUGUI>();
 
-        // Stamina
-        var stT = CreateTMPText(root, "StaminaText", "ST 4", 17, new Color(0.3f, 0.8f, 1f), TextAlignmentOptions.Left);
-        SetAnchored(stT, new Vector2(0.5f, 0.42f), new Vector2(0.98f, 0.56f), Vector2.zero, Vector2.zero);
+        // Stamina (right of middle row)
+        var stT = CreateTMPText(root, "StaminaText", "ST 4", 14, new Color(0.3f, 0.8f, 1f), TextAlignmentOptions.Center);
+        SetAnchored(stT, new Vector2(0.50f, 0.50f), new Vector2(0.98f, 0.66f), Vector2.zero, Vector2.zero);
         ppUI.staminaText = stT.GetComponent<TextMeshProUGUI>();
 
-        // ATK/DEF
-        var adT = CreateTMPText(root, "AtkDefText", "ATK 4 / DEF 3", 14, new Color(0.7f, 0.7f, 0.7f), TextAlignmentOptions.Center);
-        SetAnchored(adT, new Vector2(0.02f, 0.28f), new Vector2(0.98f, 0.42f), Vector2.zero, Vector2.zero);
+        // ATK / DEF (bottom band)
+        var adT = CreateTMPText(root, "AtkDefText", "ATK 4 / DEF 3", 12, new Color(0.75f, 0.75f, 0.75f), TextAlignmentOptions.Center);
+        SetAnchored(adT, new Vector2(0.02f, 0.33f), new Vector2(0.98f, 0.50f), Vector2.zero, Vector2.zero);
         ppUI.atkDefText = adT.GetComponent<TextMeshProUGUI>();
 
         // Dead overlay
@@ -299,18 +435,37 @@ public static class SceneBuilder
 
         ppUI.button = btn;
 
+        // LayoutElement — panels grow to fill container height, fixed min width
+        var le = root.AddComponent<LayoutElement>();
+        le.preferredWidth  = 150;
+        le.preferredHeight = 200;
+        le.minWidth  = 110;
+        le.minHeight = 160;
+
         // Save as prefab
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
         Object.DestroyImmediate(root);
 
-        // Assign to GameManager
-        GameManager gm = Object.FindObjectOfType<GameManager>();
+        // Also copy to Resources for runtime fallback
+        string resPrefabPath = "Assets/Resources/Prefabs/PlayerPanel.prefab";
+        AssetDatabase.CopyAsset(prefabPath, resPrefabPath);
+
+        // Assign to GameManager and save scene
+        GameManager gm = Object.FindFirstObjectByType<GameManager>();
         if (gm != null)
         {
             gm.playerPanelPrefab = prefab;
             EditorUtility.SetDirty(gm);
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+            Debug.Log("[SceneBuilder] PlayerPanel prefab assigned to GameManager and scene saved.");
+        }
+        else
+        {
+            Debug.LogWarning("[SceneBuilder] PlayerPanel prefab created but GameManager not found — run Build Game UI first, then Create PlayerPanel Prefab again.");
         }
 
+        AssetDatabase.Refresh();
         Debug.Log("[SceneBuilder] PlayerPanel prefab created at " + prefabPath);
     }
 

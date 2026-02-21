@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65120d469c8e2f47a6c594aed2f153a, type: 3}
+  m_Name: "Ch\u1EA1y gi\u1EB7c"
+  m_EditorClassIdentifier: 
+  cardName: "Ch\u1EA1y gi\u1EB7c"
+  cardType: 1
+  effectType: 5
+  artwork: {fileID: -7923923931746868214, guid: db369a3c3719def428441a8bac045b97, type: 3}
+  description: "Khi c\xF3 s\u1EF1 ki\u1EC7n Gi\u1EB7c ngo\u1EA1i x\xE2m, b\u1EA1n
+    kh\xF4ng b\u1ECB m\u1EA5t l\xE1 b\xE0i n\xE0o."
+  staminaCost: 1
+  count: 2

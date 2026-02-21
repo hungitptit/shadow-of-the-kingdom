@@ -5,7 +5,8 @@ using TMPro;
 
 /// <summary>
 /// Controls the Main Menu screen.
-/// Lets player choose Single Player / Multiplayer and player count (4–9).
+/// Lets player choose Single Player / Multiplayer and player count (4-9).
+/// Supports both Inspector-assigned refs and auto-find by GameObject name as fallback.
 /// </summary>
 public class MainMenuManager : MonoBehaviour
 {
@@ -33,14 +34,53 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        btnSinglePlayer.onClick.AddListener(() => SelectMode(GameConfig.GameMode.SinglePlayer));
-        btnMultiPlayer.onClick.AddListener(() => SelectMode(GameConfig.GameMode.MultiPlayer));
-        btnCountMinus.onClick.AddListener(DecrementCount);
-        btnCountPlus.onClick.AddListener(IncrementCount);
-        btnStart.onClick.AddListener(StartGame);
+        // Auto-find by name if Inspector refs are missing
+        TryAutoFindRefs();
+
+        if (btnSinglePlayer != null)
+            btnSinglePlayer.onClick.AddListener(() => SelectMode(GameConfig.GameMode.SinglePlayer));
+        if (btnMultiPlayer != null)
+            btnMultiPlayer.onClick.AddListener(() => SelectMode(GameConfig.GameMode.MultiPlayer));
+        if (btnCountMinus != null)
+            btnCountMinus.onClick.AddListener(DecrementCount);
+        if (btnCountPlus != null)
+            btnCountPlus.onClick.AddListener(IncrementCount);
+        if (btnStart != null)
+            btnStart.onClick.AddListener(StartGame);
 
         SelectMode(GameConfig.GameMode.SinglePlayer);
         UpdateCountLabel();
+    }
+
+    void TryAutoFindRefs()
+    {
+        if (btnSinglePlayer == null)
+            btnSinglePlayer = FindButton("BtnSinglePlayer");
+        if (btnMultiPlayer == null)
+            btnMultiPlayer = FindButton("BtnMultiPlayer");
+        if (btnCountMinus == null)
+            btnCountMinus = FindButton("BtnMinus");
+        if (btnCountPlus == null)
+            btnCountPlus = FindButton("BtnPlus");
+        if (btnStart == null)
+            btnStart = FindButton("BtnStart");
+
+        if (playerCountLabel == null)
+        {
+            GameObject go = GameObject.Find("PlayerCountLabel");
+            if (go != null) playerCountLabel = go.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (singlePlayerHighlight == null && btnSinglePlayer != null)
+            singlePlayerHighlight = btnSinglePlayer.GetComponent<Image>();
+        if (multiPlayerHighlight == null && btnMultiPlayer != null)
+            multiPlayerHighlight = btnMultiPlayer.GetComponent<Image>();
+    }
+
+    static Button FindButton(string goName)
+    {
+        GameObject go = GameObject.Find(goName);
+        return go != null ? go.GetComponent<Button>() : null;
     }
 
     void SelectMode(GameConfig.GameMode mode)

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65120d469c8e2f47a6c594aed2f153a, type: 3}
+  m_Name: "G\xF3p g\u1EA1o th\u1ED5i c\u01A1m chung"
+  m_EditorClassIdentifier: 
+  cardName: "G\xF3p g\u1EA1o th\u1ED5i c\u01A1m chung"
+  cardType: 3
+  effectType: 18
+  artwork: {fileID: 7664375903144529758, guid: 955c607be514db1458c25970d9eb806c, type: 3}
+  description: "C\u1EA3 l\xE0ng c\xF9ng g\xF3p g\u1EA1o, x\xE1o l\u1EA1i v\xE0 chia
+    \u0111\u1EC1u cho m\u1ECDi ng\u01B0\u1EDDi."
+  staminaCost: 0
+  count: 2

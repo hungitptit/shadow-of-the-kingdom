@@ -45,14 +45,29 @@ public class AIPlayer
             yield return new WaitForSeconds(ActionDelay);
         }
 
-        // 3. Try to attack
+        // 3. Draw a card if haven't yet and hand is not full
+        if (!self.hasDrawnThisTurn && self.hand.Count < Player.MaxHandSize && DeckManager.Instance != null)
+        {
+            DeckManager.Instance.DealTo(self);
+            self.hasDrawnThisTurn = true;
+            yield return new WaitForSeconds(ActionDelay * 0.5f);
+        }
+
+        // 4. Play a card from hand if useful
+        if (!self.hasUsedActionThisTurn)
+        {
+            TryPlayCard();
+            yield return new WaitForSeconds(ActionDelay);
+        }
+
+        // 5. Try to attack
         if (!self.hasAttackedThisTurn && self.stamina >= 3)
         {
             TryAttack();
             yield return new WaitForSeconds(ActionDelay);
         }
 
-        // 4. Consider revealing role voluntarily
+        // 6. Consider revealing role voluntarily
         TryRevealRole();
 
         yield return new WaitForSeconds(ActionDelay * 0.5f);
@@ -76,6 +91,64 @@ public class AIPlayer
         gm.SelectTarget(idx);
         gm.ActivateHiddenAction();
         return true;
+    }
+
+    void TryPlayCard()
+    {
+        if (self.hand.Count == 0) return;
+
+        // Prefer heal if low HP
+        CardData heal = self.hand.FirstOrDefault(c => c.effectType == CardEffectType.ActionHeal);
+        if (heal != null && self.hp < self.baseHp / 2)
+        {
+            gm.PlayCard(heal);
+            return;
+        }
+
+        // Equip items
+        CardData item = self.hand.FirstOrDefault(c => c.cardType == CardType.Item);
+        if (item != null)
+        {
+            gm.PlayCard(item);
+            return;
+        }
+
+        // Play events (they affect everyone, AI always plays them)
+        CardData ev = self.hand.FirstOrDefault(c => c.cardType == CardType.Event);
+        if (ev != null)
+        {
+            gm.PlayCard(ev);
+            return;
+        }
+
+        // Poison a threat if stamina allows
+        CardData poison = self.hand.FirstOrDefault(c => c.effectType == CardEffectType.ActionPoison);
+        if (poison != null && self.stamina >= poison.staminaCost)
+        {
+            Player target = FindBestAttackTarget();
+            if (target != null)
+            {
+                gm.SelectTarget(gm.players.IndexOf(target));
+                gm.PlayCard(poison);
+                return;
+            }
+        }
+
+        // Steal from richest hand
+        CardData steal = self.hand.FirstOrDefault(c => c.effectType == CardEffectType.ActionSteal);
+        if (steal != null && self.stamina >= steal.staminaCost)
+        {
+            Player richest = gm.AlivePlayers()
+                .Where(p => p != self && p.hand.Count > 0)
+                .OrderByDescending(p => p.hand.Count)
+                .FirstOrDefault();
+            if (richest != null)
+            {
+                gm.SelectTarget(gm.players.IndexOf(richest));
+                gm.PlayCard(steal);
+                return;
+            }
+        }
     }
 
     void TryPlaceHiddenAction()

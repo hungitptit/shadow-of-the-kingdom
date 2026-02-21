@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.IO;
 
@@ -85,13 +86,22 @@ public static class RoleAssetSetup
     [MenuItem("Game/Setup/Auto-Assign Roles to GameManager")]
     public static void AutoAssignRolesToGameManager()
     {
-        GameManager gm = Object.FindObjectOfType<GameManager>();
+        GameManager gm = Object.FindFirstObjectByType<GameManager>();
         if (gm == null)
         {
-            Debug.LogError("[RoleAssetSetup] GameManager not found in scene.");
-            return;
+            // GameManager not in scene yet — create a host GameObject for it
+            var gmGO = new GameObject("GameManager");
+            gm = gmGO.AddComponent<GameManager>();
+
+            // Also add UIManager on the same object if missing
+            if (Object.FindFirstObjectByType<UIManager>() == null)
+                gmGO.AddComponent<UIManager>();
+
+            Debug.Log("[RoleAssetSetup] GameManager not found — created one in scene.");
         }
 
+        if (gm.allRoles == null)
+            gm.allRoles = new System.Collections.Generic.List<RoleData>();
         gm.allRoles.Clear();
 
         string[] guids = AssetDatabase.FindAssets("t:RoleData", new[] { RoleSavePath });
@@ -104,6 +114,11 @@ public static class RoleAssetSetup
         }
 
         EditorUtility.SetDirty(gm);
-        Debug.Log($"[RoleAssetSetup] Assigned {gm.allRoles.Count} roles to GameManager.");
+
+        // Save scene so the new objects persist
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+
+        Debug.Log($"[RoleAssetSetup] Assigned {gm.allRoles.Count} roles to GameManager. Scene saved.");
     }
 }

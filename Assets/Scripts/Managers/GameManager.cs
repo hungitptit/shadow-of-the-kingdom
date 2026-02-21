@@ -15,10 +15,13 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Role Assets")]
-    public List<RoleData> allRoles;        // All role ScriptableObjects (assign in Inspector)
+    public List<RoleData> allRoles = new();  // All role ScriptableObjects (assign in Inspector)
 
     [Header("Player Setup")]
     public int playerCount = 4;
+
+    [Header("Card System")]
+    public DeckManager deckManager;
 
     [Header("UI References")]
     public UIManager uiManager;
@@ -53,6 +56,10 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // Auto-find UIManager if not assigned in Inspector
+        if (uiManager == null)
+            uiManager = Object.FindFirstObjectByType<UIManager>();
     }
 
     void Start()
@@ -113,6 +120,14 @@ public class GameManager : MonoBehaviour
         }
 
         turnsThisRound = 0;
+
+        // Build and deal cards
+        if (deckManager != null)
+        {
+            deckManager.BuildDeck();
+            foreach (Player p in players)
+                deckManager.DealStartingHand(p);
+        }
 
         // Create AI players for all non-human slots in single-player
         if (GameConfig.Mode == GameConfig.GameMode.SinglePlayer)
@@ -271,14 +286,27 @@ public class GameManager : MonoBehaviour
         turnsThisRound = 0;
         LogEvent($"─── Vòng {currentRound} bắt đầu ───");
 
-        // +1 stamina for all alive players
+        // Per-round effects for all alive players
         foreach (Player p in players)
         {
-            if (p.isAlive)
-                p.stamina += 1;
+            if (!p.isAlive) continue;
 
-            // Reset RedDevil immunity for new round
+            // +1 stamina (capped at maxStamina, or 2 if cursed)
+            int cap = p.isStaminaLocked ? 2 : p.maxStamina;
+            p.stamina = Mathf.Min(p.stamina + 1, cap);
+
+            // Poison tick
+            if (p.poisonRoundsLeft > 0)
+            {
+                p.hp -= 1;
+                p.poisonRoundsLeft--;
+                LogEvent($"{p.playerName} trúng độc: -1 Khí huyết (còn {p.poisonRoundsLeft} vòng).");
+                if (p.hp <= 0) KillPlayer(p);
+            }
+
+            // Reset per-round flags
             p.redDevilImmunityUsedThisRound = false;
+            p.fleeActive = false;
         }
 
         // Check Judge effect (after Round 6)
@@ -336,11 +364,10 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Luật: không thể tấn công Hoàng đế khi còn ít nhất 1 thành viên phe Hoàng đế khác còn sống
+        // Luật: không thể tấn công Hoàng đế bằng đòn đánh khi Cấm quân còn sống
         if (target.role?.roleType == RoleType.Emperor && IsEmperorShielded())
         {
-            LogEvent("Không thể tấn công Hoàng đế — còn thành viên phe Hoàng đế chưa bị hạ!");
-            // Hoàn trả stamina vì chưa trừ
+            LogEvent("Không thể tấn công Hoàng đế — Cấm quân vẫn còn sống!");
             return;
         }
 
@@ -451,7 +478,7 @@ public class GameManager : MonoBehaviour
     // KILL & REVEAL
     // ─────────────────────────────────────────────
 
-    void KillPlayer(Player p)
+    public void KillPlayer(Player p)
     {
         p.hp = 0;
         p.isAlive = false;
@@ -577,8 +604,76 @@ public class GameManager : MonoBehaviour
         gamePhase = GamePhase.GameOver;
         winnerText = result;
         LogEvent("══ KẾT THÚC: " + result + " ══");
-        uiManager.ShowGameOver(result);
+        uiManager?.ShowGameOver(result);
     }
+
+    // ─────────────────────────────────────────────
+    // CARD ACTIONS
+    // ─────────────────────────────────────────────
+
+    public void DrawCard()
+    {
+        if (gamePhase != GamePhase.Playing) return;
+        if (!IsCurrentPlayerHuman) return;
+
+        Player p = CurrentPlayer();
+        if (p.hasDrawnThisTurn)
+        {
+            LogEvent("Đã bốc bài trong lượt này.");
+            return;
+        }
+        if (p.hand.Count >= Player.MaxHandSize)
+        {
+            LogEvent("Tay bài đầy (tối đa 5 lá).");
+            return;
+        }
+        if (deckManager == null) return;
+
+        bool drew = deckManager.DealTo(p);
+        if (drew)
+        {
+            p.hasDrawnThisTurn = true;
+            LogEvent($"{p.playerName} bốc 1 lá bài. (còn {deckManager.DrawPileCount} lá)");
+        }
+        else
+        {
+            LogEvent("Hết bài trong deck.");
+        }
+        RefreshAll();
+    }
+
+    public void PlayCard(CardData card)
+    {
+        if (gamePhase != GamePhase.Playing) return;
+        Player p = CurrentPlayer();
+
+        if (!p.hand.Contains(card)) return;
+        if (p.hasUsedActionThisTurn && card.cardType == CardType.Action)
+        {
+            LogEvent("Đã dùng hành động trong lượt này.");
+            return;
+        }
+
+        bool ok = CardEffectExecutor.Execute(p, card);
+        if (!ok) return;
+
+        // Remove from hand (items go to equippedItems, handled by executor)
+        if (card.cardType != CardType.Item)
+            deckManager?.PlayCard(p, card);
+        else
+        {
+            p.hand.Remove(card);
+            // Item already added to equippedItems inside executor
+        }
+
+        if (card.cardType == CardType.Action)
+            p.hasUsedActionThisTurn = true;
+
+        RefreshAll();
+    }
+
+    // Called by CardEffectExecutor for effects that need win-check
+    public void CheckWinConditionsPublic() => CheckWinConditions();
 
     // ─────────────────────────────────────────────
     // TARGET SELECTION
@@ -591,7 +686,7 @@ public class GameManager : MonoBehaviour
 
         selectedTargetIndex = index;
         LogEvent("Chọn mục tiêu: " + players[index].playerName);
-        uiManager.HighlightTarget(index);
+        uiManager?.HighlightTarget(index);
     }
 
     // ─────────────────────────────────────────────
@@ -604,6 +699,16 @@ public class GameManager : MonoBehaviour
         foreach (Transform child in playerPanelContainer)
             Destroy(child.gameObject);
         playerPanels.Clear();
+
+        // Fallback: try loading prefab from Resources if not assigned in Inspector
+        if (playerPanelPrefab == null)
+            playerPanelPrefab = Resources.Load<GameObject>("Prefabs/PlayerPanel");
+
+        if (playerPanelPrefab == null)
+        {
+            Debug.LogError("[GameManager] playerPanelPrefab is not assigned! Run Game > Setup > Create PlayerPanel Prefab.");
+            return;
+        }
 
         for (int i = 0; i < players.Count; i++)
         {
@@ -630,10 +735,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void RefreshAll()
+    public void RefreshAll()
     {
         UpdateAllPlayerPanels();
-        uiManager.RefreshCurrentPlayer(CurrentPlayer(), currentRound);
+        uiManager?.RefreshCurrentPlayer(CurrentPlayer(), currentRound);
     }
 
     public void LogEvent(string message)
@@ -647,15 +752,16 @@ public class GameManager : MonoBehaviour
     // ─────────────────────────────────────────────
 
     /// <summary>
-    /// Returns true nếu còn ít nhất 1 thành viên phe Hoàng đế (không phải Hoàng đế) còn sống.
-    /// Khi đó Hoàng đế được "che chắn" và không thể bị tấn công trực tiếp.
+    /// Returns true nếu Cấm quân còn sống trong ván.
+    /// Khi còn Cấm quân, Hoàng đế không thể bị tấn công bằng đòn đánh thường.
+    /// Nếu ván không có Cấm quân (4 người chơi), Hoàng đế không có shield.
     /// </summary>
     public bool IsEmperorShielded()
     {
-        return players.Any(p =>
-            p.isAlive &&
-            p.role?.faction == Faction.Emperor &&
-            p.role?.roleType != RoleType.Emperor);
+        bool guardExistsInGame = players.Any(p => p.role?.roleType == RoleType.Guard);
+        if (!guardExistsInGame) return false;
+
+        return players.Any(p => p.isAlive && p.role?.roleType == RoleType.Guard);
     }
 
     public static string GetRoleName(RoleType rt)

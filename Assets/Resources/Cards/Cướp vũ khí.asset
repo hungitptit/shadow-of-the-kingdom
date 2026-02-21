@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65120d469c8e2f47a6c594aed2f153a, type: 3}
+  m_Name: "C\u01B0\u1EDBp v\u0169 kh\xED"
+  m_EditorClassIdentifier: 
+  cardName: "C\u01B0\u1EDBp v\u0169 kh\xED"
+  cardType: 1
+  effectType: 14
+  artwork: {fileID: 5883457741080352088, guid: 71542297ec3af8d48893047bb0e184f1, type: 3}
+  description: "C\u01B0\u1EDBp Binh kh\xED c\u1EE7a 1 ng\u01B0\u1EDDi ch\u01A1i kh\xE1c."
+  staminaCost: 1
+  count: 2
