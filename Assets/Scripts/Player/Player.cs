@@ -20,6 +20,8 @@ public class Player
 
     public bool isAlive = true;
     public bool isRevealed = false;
+    // In single-player: human can see their own role even if not publicly revealed
+    public bool isSelfKnown = false;
 
     // Has this player taken their attack action this turn?
     public bool hasAttackedThisTurn = false;

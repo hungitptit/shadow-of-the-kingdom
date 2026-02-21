@@ -69,17 +69,21 @@ public class UIManager : MonoBehaviour
         if (defenseText != null)
             defenseText.text = "Phòng thủ: " + player.defense;
 
+        // Role display: show if publicly revealed OR if it's the human's own card
+        bool canSeeRole = player.isRevealed || player.isSelfKnown;
+
         if (roleText != null)
         {
-            if (player.isRevealed && player.role != null)
-                roleText.text = GameManager.GetRoleName(player.role.roleType);
+            if (canSeeRole && player.role != null)
+                roleText.text = GameManager.GetRoleName(player.role.roleType) +
+                                (player.isSelfKnown && !player.isRevealed ? " (bí mật)" : "");
             else
                 roleText.text = "Vai trò: Ẩn";
         }
 
         if (roleImage != null)
         {
-            if (player.isRevealed && player.role?.cardImage != null)
+            if (canSeeRole && player.role?.cardImage != null)
             {
                 roleImage.sprite = player.role.cardImage;
                 roleImage.gameObject.SetActive(true);
@@ -90,16 +94,18 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // Update button interactability
+        // Buttons only interactable when it's the human's turn
         bool isPlaying = GameManager.Instance.gamePhase == GamePhase.Playing;
+        bool isHumanTurn = GameManager.Instance.IsCurrentPlayerHuman;
+
         if (attackButton != null)
-            attackButton.interactable = isPlaying && !player.hasAttackedThisTurn && player.stamina >= 3;
+            attackButton.interactable = isPlaying && isHumanTurn && !player.hasAttackedThisTurn && player.stamina >= 3;
         if (placeHiddenButton != null)
-            placeHiddenButton.interactable = isPlaying && !player.hasUsedActionThisTurn;
+            placeHiddenButton.interactable = isPlaying && isHumanTurn && !player.hasUsedActionThisTurn;
         if (revealRoleButton != null)
-            revealRoleButton.interactable = isPlaying && !player.isRevealed;
+            revealRoleButton.interactable = isPlaying && isHumanTurn && !player.isRevealed;
         if (endTurnButton != null)
-            endTurnButton.interactable = isPlaying;
+            endTurnButton.interactable = isPlaying && isHumanTurn;
     }
 
     public void HighlightTarget(int targetIndex)

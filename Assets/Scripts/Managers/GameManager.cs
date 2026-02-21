@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -39,6 +40,16 @@ public class GameManager : MonoBehaviour
     // Win result
     public string winnerText = "";
 
+    // ── AI / Single-player ──────────────────────────────────────
+    // humanPlayerIndex = which player index the human controls (-1 = all human / multiplayer)
+    public int humanPlayerIndex = 0;
+    private Dictionary<int, AIPlayer> aiPlayers = new Dictionary<int, AIPlayer>();
+    private bool aiTurnRunning = false;
+
+    public bool IsCurrentPlayerHuman =>
+        GameConfig.Mode == GameConfig.GameMode.MultiPlayer ||
+        currentPlayerIndex == humanPlayerIndex;
+
     void Awake()
     {
         Instance = this;
@@ -46,7 +57,10 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        SetupGame(playerCount);
+        // Read config from MainMenu if available
+        int count = GameConfig.PlayerCount > 0 ? GameConfig.PlayerCount : playerCount;
+        humanPlayerIndex = GameConfig.HumanPlayerIndex;
+        SetupGame(count);
     }
 
     // ─────────────────────────────────────────────
@@ -55,20 +69,26 @@ public class GameManager : MonoBehaviour
 
     public void SetupGame(int count)
     {
+        StopAllCoroutines();
         players.Clear();
         playerPanels.Clear();
+        aiPlayers.Clear();
         currentPlayerIndex = 0;
         currentRound = 1;
         selectedTargetIndex = -1;
         gamePhase = GamePhase.Playing;
         winnerText = "";
+        aiTurnRunning = false;
 
         uiManager?.HideGameOver();
 
         // Create players
         for (int i = 0; i < count; i++)
         {
-            players.Add(new Player("Player " + (i + 1)));
+            string name = (GameConfig.Mode == GameConfig.GameMode.SinglePlayer && i == humanPlayerIndex)
+                ? "Bạn"
+                : "Player " + (i + 1);
+            players.Add(new Player(name));
         }
 
         // Assign roles by player count (Appendix A) and shuffle
@@ -83,17 +103,37 @@ public class GameManager : MonoBehaviour
         // Emperor reveals immediately
         Player emperor = players.FirstOrDefault(p => p.role.roleType == RoleType.Emperor);
         if (emperor != null)
-        {
             emperor.isRevealed = true;
+
+        // In single-player: human always knows their own role
+        if (GameConfig.Mode == GameConfig.GameMode.SinglePlayer)
+        {
+            // Mark human's role as "known to self" — shown in info panel but not on board
+            players[humanPlayerIndex].isSelfKnown = true;
         }
 
         turnsThisRound = 0;
+
+        // Create AI players for all non-human slots in single-player
+        if (GameConfig.Mode == GameConfig.GameMode.SinglePlayer)
+        {
+            for (int i = 0; i < players.Count; i++)
+            {
+                if (i != humanPlayerIndex)
+                    aiPlayers[i] = new AIPlayer(players[i], this);
+            }
+        }
 
         CreatePlayerPanels();
         RefreshAll();
 
         LogEvent("Ván chơi bắt đầu. Vòng 1.");
+        LogEvent(players[humanPlayerIndex].playerName + " là " +
+                 GetRoleName(players[humanPlayerIndex].role.roleType));
         LogEvent("Lượt: " + CurrentPlayer().playerName);
+
+        // If first turn is AI, trigger it
+        TriggerAIIfNeeded();
     }
 
     List<RoleData> GetRolesForPlayerCount(int count)
@@ -151,29 +191,62 @@ public class GameManager : MonoBehaviour
     // TURN & ROUND
     // ─────────────────────────────────────────────
 
+    // Called by the human player via UI button
     public void EndTurn()
     {
         if (gamePhase != GamePhase.Playing) return;
+        if (aiTurnRunning) return;          // block human input during AI turn
+        AdvanceTurn();
+    }
 
+    // Called internally by AI (bypasses the aiTurnRunning guard)
+    public void AIEndTurn()
+    {
+        if (gamePhase != GamePhase.Playing) return;
+        AdvanceTurn();
+    }
+
+    void AdvanceTurn()
+    {
         CurrentPlayer().ResetTurnFlags();
         selectedTargetIndex = -1;
         turnsThisRound++;
 
         int aliveBefore = AlivePlayers().Count;
 
-        // Check if all alive players have taken their turn → end round
         if (turnsThisRound >= aliveBefore)
         {
             EndRound();
         }
         else
         {
-            // Advance to next alive player
             AdvanceToNextAlive();
             RefreshAll();
             if (gamePhase == GamePhase.Playing)
+            {
                 LogEvent("Lượt: " + CurrentPlayer().playerName);
+                TriggerAIIfNeeded();
+            }
         }
+    }
+
+    void TriggerAIIfNeeded()
+    {
+        if (gamePhase != GamePhase.Playing) return;
+        if (IsCurrentPlayerHuman) return;
+        if (aiTurnRunning) return;
+        if (!aiPlayers.TryGetValue(currentPlayerIndex, out AIPlayer ai)) return;
+
+        aiTurnRunning = true;
+        StartCoroutine(RunAITurn(ai));
+    }
+
+    IEnumerator RunAITurn(AIPlayer ai)
+    {
+        yield return StartCoroutine(ai.TakeTurn());
+        aiTurnRunning = false;
+        // After flag is cleared, trigger next AI if round just wrapped
+        TriggerAIIfNeeded();
     }
 
     void AdvanceToNextAlive()
@@ -217,7 +290,13 @@ public class GameManager : MonoBehaviour
         RefreshAll();
 
         if (gamePhase == GamePhase.Playing)
+        {
             LogEvent("Lượt: " + CurrentPlayer().playerName);
+            // TriggerAIIfNeeded is called by RunAITurn after flag reset,
+            // or directly here only if no AI turn is currently running
+            if (!aiTurnRunning)
+                TriggerAIIfNeeded();
+        }
     }
 
     void CheckJudgeEffect()
