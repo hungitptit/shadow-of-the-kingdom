@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b30cbda256d754d864ed43515daf47, type: 3}
+  m_Name: Farmer
+  m_EditorClassIdentifier: 
+  roleType: 6
+  faction: 2
+  cardImage: {fileID: -5808050518061255936, guid: 72874b4851aebf74084bbaf247be2a87, type: 3}
+  description: "Chi\u1EBFn th\u1EAFng khi m\u1ED9t phe ch\xEDnh th\u1EAFng v\xE0
+    N\xF4ng d\xE2n c\xF2n s\u1ED1ng."

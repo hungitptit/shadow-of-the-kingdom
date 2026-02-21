@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b30cbda256d754d864ed43515daf47, type: 3}
+  m_Name: Queen
+  m_EditorClassIdentifier: 
+  roleType: 1
+  faction: 0
+  cardImage: {fileID: 1464787669266960419, guid: aa9250d38fa843442a2e820901e8ec30, type: 3}
+  description: "Khi l\u1EADt Vai tr\xF2 \u2192 Ho\xE0ng \u0111\u1EBF h\u1ED3i 1 Kh\xED
+    huy\u1EBFt."

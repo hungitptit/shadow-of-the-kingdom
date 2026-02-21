@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b30cbda256d754d864ed43515daf47, type: 3}
+  m_Name: Emperor
+  m_EditorClassIdentifier: 
+  roleType: 0
+  faction: 0
+  cardImage: {fileID: -2608745815128704999, guid: f15df387041f11f42b7dd4bd857a5a7e, type: 3}
+  description: "Ho\xE0ng \u0111\u1EBF. N\u1EBFu b\u1ECB h\u1EA1 \u2192 phe Ph\u1EA3n
+    th\u1EA7n th\u1EAFng ngay."

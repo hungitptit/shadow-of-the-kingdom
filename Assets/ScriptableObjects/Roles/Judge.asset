@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b30cbda256d754d864ed43515daf47, type: 3}
+  m_Name: Judge
+  m_EditorClassIdentifier: 
+  roleType: 3
+  faction: 0
+  cardImage: {fileID: -7467931659298305210, guid: 7e55fa7812c096745b1ad31cf19b20c9, type: 3}
+  description: "Sau v\xF2ng 6, n\u1EBFu c\xF2n s\u1ED1ng: l\u1EADt b\xE0i, ch\u1ECDn
+    2 ng\u01B0\u1EDDi kh\xE1c ph\u1EA3i l\u1EADt ngay."
