@@ -386,6 +386,27 @@ public static class CardEffectExecutor
         return true;
     }
 
+    // ── CLASSIFICATION HELPERS ────────────────────────────────────
+
+    /// <summary>Lá này có cần chọn target không?</summary>
+    public static bool NeedsTarget(CardData card) => card.effectType switch
+    {
+        CardEffectType.ActionSteal        => true,
+        CardEffectType.ActionPoison       => true,
+        CardEffectType.ActionSwapStats    => true,
+        CardEffectType.ActionExorcism     => true,
+        CardEffectType.ActionCurse        => true,
+        CardEffectType.ActionStealWeapon  => true,
+        CardEffectType.ActionStealArmor   => true,
+        CardEffectType.ActionRevive       => true,  // chọn người chết để hồi sinh
+        CardEffectType.HiddenAssassinate  => true,
+        CardEffectType.HiddenProtect      => true,
+        _                                 => false
+    };
+
+    /// <summary>Lá Item thì play ngay không cần preview.</summary>
+    public static bool NeedsPreview(CardData card) => card.cardType != CardType.Item;
+
     // ── HELPERS ──────────────────────────────────────────────────
 
     static Player GetTarget()

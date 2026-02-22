@@ -133,4 +133,39 @@ public class PlayerPanelUI : MonoBehaviour
         if (background == null) return;
         background.color = active ? colorActive : colorDefault;
     }
+
+    /// <summary>
+    /// Dùng trong Card Preview Panel: override OnClick để gọi callback thay vì SelectTarget toàn cục.
+    /// Khi được chọn, tô màu selected; các panel khác trong cùng container reset về default.
+    /// </summary>
+    public void SetupAsTargetOption(Player player, int index, System.Action<int> onSelected)
+    {
+        playerIndex = index;
+
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() =>
+            {
+                // Highlight tất cả panel cùng parent
+                if (transform.parent != null)
+                {
+                    foreach (Transform sibling in transform.parent)
+                    {
+                        var ppUI = sibling.GetComponent<PlayerPanelUI>();
+                        if (ppUI != null && ppUI.background != null)
+                            ppUI.background.color = ppUI.colorDefault;
+                    }
+                }
+
+                if (background != null)
+                    background.color = colorSelected;
+
+                GameManager.Instance?.SelectTarget(index);
+                onSelected?.Invoke(index);
+            });
+        }
+
+        Refresh(player, false, false);
+    }
 }

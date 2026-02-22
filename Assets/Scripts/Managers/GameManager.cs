@@ -808,13 +808,18 @@ public class GameManager : MonoBehaviour
     // TARGET SELECTION
     // ─────────────────────────────────────────────
 
+    // Khi đang preview lá HiddenAction, cho phép chọn chính mình làm target
+    public bool selfTargetAllowed = false;
+    public void SetSelfTargetAllowed(bool allowed) => selfTargetAllowed = allowed;
+
     public void SelectTarget(int index)
     {
-        if (index == currentPlayerIndex) return;
+        if (!selfTargetAllowed && index == currentPlayerIndex) return;
         if (!players[index].isAlive) return;
 
         selectedTargetIndex = index;
-        LogEvent("Chọn mục tiêu: " + players[index].playerName);
+        string name = players[index].playerName;
+        LogEvent("Chọn mục tiêu: " + (index == currentPlayerIndex ? name + " (bản thân)" : name));
         uiManager?.HighlightTarget(index);
     }
 

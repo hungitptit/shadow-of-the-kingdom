@@ -141,7 +141,19 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     void OnClick()
     {
         if (_card == null) return;
-        GameManager.Instance?.PlayCard(_card);
+
+        // Item: trang bị ngay, không cần preview hay chọn target
+        if (!CardEffectExecutor.NeedsPreview(_card))
+        {
+            GameManager.Instance?.PlayCard(_card);
+            return;
+        }
+
+        var ui = Object.FindFirstObjectByType<UIManager>();
+        if (ui != null)
+            ui.ShowCardPreview(_card);
+        else
+            GameManager.Instance?.PlayCard(_card);
     }
 
     public void OnPointerEnter(PointerEventData data)

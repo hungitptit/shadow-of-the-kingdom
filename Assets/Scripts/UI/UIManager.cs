@@ -46,6 +46,22 @@ public class UIManager : MonoBehaviour
     [Header("Target Info")]
     public TextMeshProUGUI targetInfoText;
 
+    [Header("Card Preview Panel")]
+    public GameObject      cardPreviewPanel;
+    public Image           cpArtworkImage;
+    public TextMeshProUGUI cpCardNameText;
+    public TextMeshProUGUI cpDescText;
+    public TextMeshProUGUI cpCostText;
+    public Image           cpTypeBar;
+    public TextMeshProUGUI cpTypeLabel;
+    public Button          cpConfirmButton;
+    public Button          cpCancelButton;
+    public GameObject      cpTargetSection; // ẩn/hiện toàn bộ vùng chọn target
+    public Transform       cpTargetList;    // HorizontalLayoutGroup chứa nút target
+
+    // Lá bài đang chờ xác nhận
+    CardData _pendingCard;
+
     [Header("Protect Confirm Overlay")]
     public GameObject protectConfirmPanel;
     public Button     protectYesButton;
@@ -344,6 +360,161 @@ public class UIManager : MonoBehaviour
         if (eventNotificationPanel != null)
             eventNotificationPanel.SetActive(false);
         _eventNotifCoroutine = null;
+    }
+
+    // ── Card Preview ─────────────────────────────────────────────
+
+    static readonly Color ColorItem   = new Color(0.2f, 0.7f, 0.3f);
+    static readonly Color ColorAction = new Color(0.2f, 0.4f, 0.9f);
+    static readonly Color ColorHidden = new Color(0.5f, 0.1f, 0.7f);
+    static readonly Color ColorEvent  = new Color(0.9f, 0.5f, 0.1f);
+
+    static Color TypeColorFor(CardType t) => t switch
+    {
+        CardType.Item         => ColorItem,
+        CardType.Action       => ColorAction,
+        CardType.HiddenAction => ColorHidden,
+        CardType.Event        => ColorEvent,
+        _                    => Color.gray
+    };
+
+    static string TypeLabelFor(CardType t) => t switch
+    {
+        CardType.Item         => "Vật phẩm",
+        CardType.Action       => "Hành động",
+        CardType.HiddenAction => "Hành động bí mật",
+        CardType.Event        => "Sự kiện",
+        _                    => ""
+    };
+
+    /// <summary>
+    /// Mở panel phóng to lá bài.
+    /// - Nếu lá cần target: hiện danh sách nút người chơi ngay trong panel để chọn.
+    /// - Lá HiddenAction cho phép chọn chính mình.
+    /// </summary>
+    public void ShowCardPreview(CardData card)
+    {
+        if (cardPreviewPanel == null)
+        {
+            GameManager.Instance?.PlayCard(card);
+            return;
+        }
+
+        _pendingCard = card;
+
+        // Điền thông tin lá bài
+        if (cpCardNameText != null) cpCardNameText.text = card.cardName;
+        if (cpDescText     != null) cpDescText.text     = card.description;
+
+        Color typeColor = TypeColorFor(card.cardType);
+        if (cpTypeBar   != null) cpTypeBar.color  = typeColor;
+        if (cpTypeLabel != null) cpTypeLabel.text  = TypeLabelFor(card.cardType);
+
+        if (cpArtworkImage != null)
+        {
+            cpArtworkImage.sprite = card.artwork;
+            cpArtworkImage.gameObject.SetActive(card.artwork != null);
+        }
+
+        if (cpCostText != null)
+        {
+            bool hasCost = card.staminaCost > 0;
+            cpCostText.transform.parent.gameObject.SetActive(hasCost);
+            if (hasCost) cpCostText.text = card.staminaCost + " ST";
+        }
+
+        bool needsTarget = CardEffectExecutor.NeedsTarget(card);
+        bool allowSelf   = card.cardType == CardType.HiddenAction;
+
+        // Hiện / ẩn vùng chọn target
+        if (cpTargetSection != null)
+            cpTargetSection.SetActive(needsTarget);
+
+        if (needsTarget)
+            PopulateTargetList(card, allowSelf);
+
+        // Reset target cũ để tránh chọn nhầm
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.selectedTargetIndex = -1;
+            GameManager.Instance.SetSelfTargetAllowed(allowSelf);
+        }
+
+        cardPreviewPanel.SetActive(true);
+
+        cpConfirmButton.onClick.RemoveAllListeners();
+        cpCancelButton.onClick.RemoveAllListeners();
+        cpConfirmButton.onClick.AddListener(ConfirmCardPlay);
+        cpCancelButton.onClick.AddListener(CancelCardPreview);
+    }
+
+    void PopulateTargetList(CardData card, bool allowSelf)
+    {
+        if (cpTargetList == null) return;
+
+        foreach (Transform child in cpTargetList)
+            Destroy(child.gameObject);
+
+        var gm = GameManager.Instance;
+        if (gm == null || gm.playerPanelPrefab == null) return;
+
+        bool isRevive = card.effectType == CardEffectType.ActionRevive;
+
+        for (int i = 0; i < gm.players.Count; i++)
+        {
+            Player p = gm.players[i];
+            int capturedIndex = i;
+            bool isSelf = (i == gm.currentPlayerIndex);
+
+            // Revive: chỉ hiện người chết; còn lại: chỉ hiện người sống
+            if (isRevive  &&  p.isAlive)  continue;
+            if (!isRevive && !p.isAlive)  continue;
+
+            // Bỏ chính mình nếu không được phép
+            if (isSelf && !allowSelf) continue;
+
+            // Instantiate PlayerPanel prefab
+            GameObject go = Instantiate(gm.playerPanelPrefab, cpTargetList);
+
+            // Đặt tên để dễ debug
+            go.name = "TargetOption_" + p.playerName;
+
+            // Đảm bảo LayoutElement flexibleWidth = 1 để dãn đều
+            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.flexibleWidth  = 1f;
+            le.minWidth       = 60f;
+            le.minHeight      = 80f;
+            le.preferredWidth = -1;  // để HLG quyết định
+
+            var ppUI = go.GetComponent<PlayerPanelUI>();
+            if (ppUI != null)
+            {
+                // Tô màu khác nếu là bản thân để phân biệt
+                if (isSelf && ppUI.background != null)
+                    ppUI.colorDefault = new Color(0.15f, 0.30f, 0.50f, 0.95f);
+
+                ppUI.SetupAsTargetOption(p, capturedIndex, _ => { });
+            }
+        }
+    }
+
+    void ConfirmCardPlay()
+    {
+        if (_pendingCard == null) return;
+        var card = _pendingCard;
+        _pendingCard = null;
+        cardPreviewPanel.SetActive(false);
+        GameManager.Instance?.SetSelfTargetAllowed(false);
+        GameManager.Instance?.PlayCard(card);
+    }
+
+    public void CancelCardPreview()
+    {
+        _pendingCard = null;
+        GameManager.Instance?.SetSelfTargetAllowed(false);
+        if (GameManager.Instance != null)
+            GameManager.Instance.selectedTargetIndex = -1;
+        if (cardPreviewPanel != null) cardPreviewPanel.SetActive(false);
     }
 
     // ── Protect Confirm ──────────────────────────────────────────

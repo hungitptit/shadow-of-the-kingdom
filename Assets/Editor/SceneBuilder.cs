@@ -252,9 +252,116 @@ public static class SceneBuilder
         SetAnchored(peekClose, new Vector2(0.4f, 0.30f), new Vector2(0.6f, 0.40f), Vector2.zero, Vector2.zero);
         // Listener is wired at runtime by UIManager.Start()
 
+        // ── Card Preview Panel (layout 2 cột: trái = artwork, phải = info + target + nút) ──
+        // Dùng Canvas riêng với sortingOrder cao để luôn render trên tất cả UI khác
+        var cardPreviewGO = new GameObject("CardPreviewPanel");
+        cardPreviewGO.transform.SetParent(canvasGO.transform, false);
+        var cpRootRT = cardPreviewGO.AddComponent<RectTransform>();
+        cpRootRT.anchorMin = Vector2.zero;
+        cpRootRT.anchorMax = Vector2.one;
+        cpRootRT.offsetMin = Vector2.zero;
+        cpRootRT.offsetMax = Vector2.zero;
+        var cpCanvas = cardPreviewGO.AddComponent<Canvas>();
+        cpCanvas.overrideSorting = true;
+        cpCanvas.sortingOrder    = 50;        // trên tất cả panel khác (sortingOrder 0)
+        cardPreviewGO.AddComponent<GraphicRaycaster>();
+        var cpBg = cardPreviewGO.AddComponent<Image>();
+        cpBg.color = new Color(0f, 0f, 0f, 0.78f);
+        cardPreviewGO.SetActive(false);
+
+        // Outer frame — chiếm 70% chiều rộng, 80% chiều cao màn hình
+        var cpFrame = CreateImage(cardPreviewGO, "CardPreviewFrame", new Color(0.09f, 0.07f, 0.14f, 1f));
+        SetAnchored(cpFrame, new Vector2(0.15f, 0.10f), new Vector2(0.85f, 0.90f), Vector2.zero, Vector2.zero);
+        AddOutline(cpFrame, new Color(0.85f, 0.65f, 0.15f, 1f));
+
+        // ── CỘT TRÁI: Artwork chiếm full chiều cao (40% chiều rộng frame) ──
+        var cpArtGO = CreateImage(cpFrame, "CPArtwork", new Color(0.05f, 0.04f, 0.08f));
+        SetAnchored(cpArtGO, Vector2.zero, new Vector2(0.40f, 1f), Vector2.zero, Vector2.zero);
+        cpArtGO.GetComponent<Image>().preserveAspect = false;
+
+        // Artwork image bên trong, giữ tỉ lệ
+        var cpArtImg = CreateImage(cpArtGO, "CPArtworkInner", Color.white);
+        SetAnchored(cpArtImg, new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.96f), Vector2.zero, Vector2.zero);
+        cpArtImg.GetComponent<Image>().preserveAspect = true;
+
+        // ── CỘT PHẢI: info + target + nút (60% chiều rộng còn lại) ──
+        var cpRight = new GameObject("CPRight");
+        cpRight.transform.SetParent(cpFrame.transform, false);
+        cpRight.AddComponent<RectTransform>();
+        SetAnchored(cpRight, new Vector2(0.40f, 0f), new Vector2(1f, 1f), new Vector2(10, 8), new Vector2(-10, -8));
+
+        // Type bar (trên cùng cột phải, 8% chiều cao)
+        var cpTypeBar = CreateImage(cpRight, "CPTypeBar", new Color(0.2f, 0.4f, 0.9f));
+        SetAnchored(cpTypeBar, new Vector2(0f, 0.92f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+        var cpTypeLabel = CreateTMPText(cpTypeBar, "CPTypeLabel", "Hành động", 13, Color.white, TextAlignmentOptions.Center);
+        SetAnchored(cpTypeLabel, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, 0));
+
+        // Tên lá bài (14% chiều cao)
+        var cpName = CreateTMPText(cpRight, "CPCardName", "Tên lá bài", 22, TEXT_GOLD, TextAlignmentOptions.Left);
+        SetAnchored(cpName, new Vector2(0f, 0.78f), new Vector2(0.75f, 0.92f), new Vector2(4, 2), new Vector2(-4, -2));
+        cpName.GetComponent<TextMeshProUGUI>().fontStyle = FontStyles.Bold;
+        cpName.GetComponent<TextMeshProUGUI>().enableWordWrapping = false;
+        cpName.GetComponent<TextMeshProUGUI>().overflowMode = TextOverflowModes.Ellipsis;
+
+        // Cost badge (góc phải trên)
+        var cpCostGO = CreateImage(cpRight, "CPCostBadge", new Color(0.15f, 0.35f, 0.65f));
+        SetAnchored(cpCostGO, new Vector2(0.75f, 0.79f), new Vector2(1f, 0.92f), new Vector2(2, 2), new Vector2(-2, -2));
+        var cpCost = CreateTMPText(cpCostGO, "CPCostText", "3 ST", 13, Color.white, TextAlignmentOptions.Center);
+        SetAnchored(cpCost, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        // Mô tả (20% chiều cao)
+        var cpDesc = CreateTMPText(cpRight, "CPDescription", "Mô tả hiệu ứng...", 13, TEXT_DIM, TextAlignmentOptions.TopLeft);
+        SetAnchored(cpDesc, new Vector2(0f, 0.56f), new Vector2(1f, 0.78f), new Vector2(4, 2), new Vector2(-4, -2));
+        cpDesc.GetComponent<TextMeshProUGUI>().enableWordWrapping = true;
+
+        // Đường kẻ phân cách
+        var cpDivider = CreateImage(cpRight, "CPDivider", new Color(0.5f, 0.35f, 0.1f, 0.6f));
+        SetAnchored(cpDivider, new Vector2(0f, 0.545f), new Vector2(1f, 0.555f), Vector2.zero, Vector2.zero);
+
+        // Target section (chỉ hiện khi lá cần target) — 44% chiều cao giữa
+        var cpTargetSection = new GameObject("CPTargetSection");
+        cpTargetSection.transform.SetParent(cpRight.transform, false);
+        cpTargetSection.AddComponent<RectTransform>();
+        SetAnchored(cpTargetSection, new Vector2(0f, 0.10f), new Vector2(1f, 0.545f), new Vector2(0, 4), new Vector2(0, -4));
+
+        var cpTargetLabel = CreateTMPText(cpTargetSection, "CPTargetLabel", "Chọn mục tiêu:", 12,
+            new Color(0.7f, 0.85f, 1f), TextAlignmentOptions.Left);
+        SetAnchored(cpTargetLabel, new Vector2(0f, 0.85f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+
+        var cpTargetList = new GameObject("CPTargetList");
+        cpTargetList.transform.SetParent(cpTargetSection.transform, false);
+        cpTargetList.AddComponent<RectTransform>();
+        SetAnchored(cpTargetList, new Vector2(0f, 0f), new Vector2(1f, 0.84f), Vector2.zero, Vector2.zero);
+        var cpTargetHLG = cpTargetList.AddComponent<HorizontalLayoutGroup>();
+        cpTargetHLG.spacing            = 5;
+        cpTargetHLG.childForceExpandWidth  = true;
+        cpTargetHLG.childForceExpandHeight = true;
+        cpTargetHLG.childAlignment     = TextAnchor.MiddleCenter;
+        cpTargetHLG.padding            = new RectOffset(2, 2, 2, 2);
+
+        // 2 nút nhỏ ở cuối cột phải (10% chiều cao)
+        var cpConfirm = CreateButton(cpRight, "CPConfirmButton", "✔ Xác nhận", BTN_ENDTURN);
+        SetAnchored(cpConfirm, new Vector2(0f, 0f), new Vector2(0.48f, 0.09f), Vector2.zero, Vector2.zero);
+        var cpConfirmLabel = cpConfirm.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+        if (cpConfirmLabel != null) cpConfirmLabel.fontSize = 13;
+
+        var cpCancel = CreateButton(cpRight, "CPCancelButton", "✘ Hủy", new Color(0.45f, 0.12f, 0.12f));
+        SetAnchored(cpCancel, new Vector2(0.52f, 0f), new Vector2(1f, 0.09f), Vector2.zero, Vector2.zero);
+        var cpCancelLabel = cpCancel.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+        if (cpCancelLabel != null) cpCancelLabel.fontSize = 13;
+
         // ── Protect Confirm Overlay (hỏi human có muốn kích hoạt Bảo vệ không) ──
-        var protectConfirmGO = CreateImage(canvasGO, "ProtectConfirmPanel", new Color(0f, 0f, 0f, 0.78f));
-        StretchFull(protectConfirmGO);
+        var protectConfirmGO = new GameObject("ProtectConfirmPanel");
+        protectConfirmGO.transform.SetParent(canvasGO.transform, false);
+        var pcRootRT = protectConfirmGO.AddComponent<RectTransform>();
+        pcRootRT.anchorMin = Vector2.zero; pcRootRT.anchorMax = Vector2.one;
+        pcRootRT.offsetMin = Vector2.zero; pcRootRT.offsetMax = Vector2.zero;
+        var pcRootCanvas = protectConfirmGO.AddComponent<Canvas>();
+        pcRootCanvas.overrideSorting = true;
+        pcRootCanvas.sortingOrder    = 51;
+        protectConfirmGO.AddComponent<GraphicRaycaster>();
+        var pcRootBg = protectConfirmGO.AddComponent<Image>();
+        pcRootBg.color = new Color(0f, 0f, 0f, 0.78f);
         protectConfirmGO.SetActive(false);
 
         var pcFrame = CreateImage(protectConfirmGO, "ProtectConfirmFrame", new Color(0.10f, 0.07f, 0.20f, 1f));
@@ -279,8 +386,17 @@ public static class SceneBuilder
         SetAnchored(pcNo, new Vector2(0.54f, 0.05f), new Vector2(0.92f, 0.28f), Vector2.zero, Vector2.zero);
 
         // ── Event Notification Overlay (hiện khi bốc trúng lá Event) ──
-        var eventNotifGO = CreateImage(canvasGO, "EventNotificationPanel", new Color(0f, 0f, 0f, 0.82f));
-        StretchFull(eventNotifGO);
+        var eventNotifGO = new GameObject("EventNotificationPanel");
+        eventNotifGO.transform.SetParent(canvasGO.transform, false);
+        var enRootRT = eventNotifGO.AddComponent<RectTransform>();
+        enRootRT.anchorMin = Vector2.zero; enRootRT.anchorMax = Vector2.one;
+        enRootRT.offsetMin = Vector2.zero; enRootRT.offsetMax = Vector2.zero;
+        var enRootCanvas = eventNotifGO.AddComponent<Canvas>();
+        enRootCanvas.overrideSorting = true;
+        enRootCanvas.sortingOrder    = 52;
+        eventNotifGO.AddComponent<GraphicRaycaster>();
+        var enRootBg = eventNotifGO.AddComponent<Image>();
+        enRootBg.color = new Color(0f, 0f, 0f, 0.82f);
         eventNotifGO.SetActive(false);
 
         // Card frame bên trong (giữa màn hình)
@@ -364,6 +480,19 @@ public static class SceneBuilder
             ui.deckCountText     = deckCountTxt.GetComponent<TextMeshProUGUI>();
             ui.peekOverlay       = peekOverlay;
             ui.peekContainer     = peekContainer.transform;
+
+            // Card preview panel
+            ui.cardPreviewPanel    = cardPreviewGO;
+            ui.cpArtworkImage      = cpArtImg.GetComponent<Image>();   // inner image giữ tỉ lệ
+            ui.cpCardNameText      = cpName.GetComponent<TextMeshProUGUI>();
+            ui.cpDescText          = cpDesc.GetComponent<TextMeshProUGUI>();
+            ui.cpCostText          = cpCost.GetComponent<TextMeshProUGUI>();
+            ui.cpTypeBar           = cpTypeBar.GetComponent<Image>();
+            ui.cpTypeLabel         = cpTypeLabel.GetComponent<TextMeshProUGUI>();
+            ui.cpConfirmButton     = cpConfirm.GetComponent<Button>();
+            ui.cpCancelButton      = cpCancel.GetComponent<Button>();
+            ui.cpTargetSection     = cpTargetSection;
+            ui.cpTargetList        = cpTargetList.transform;
 
             // Protect confirm overlay
             ui.protectConfirmPanel = protectConfirmGO;
