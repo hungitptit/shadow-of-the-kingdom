@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "G\xF3p g\u1EA1o th\u1ED5i c\u01A1m chung"
   cardType: 3
-  effectType: 18
+  effectType: 19
   artwork: {fileID: 7664375903144529758, guid: 955c607be514db1458c25970d9eb806c, type: 3}
   description: "C\u1EA3 l\xE0ng c\xF9ng g\xF3p g\u1EA1o, x\xE1o l\u1EA1i v\xE0 chia
     \u0111\u1EC1u cho m\u1ECDi ng\u01B0\u1EDDi."
   staminaCost: 0
-  count: 2
+  count: 3

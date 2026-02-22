@@ -29,6 +29,7 @@ public enum CardEffectType
     ActionCurse,        // Oán linh: khóa max stamina mục tiêu ở 2
     ActionStealWeapon,  // Cướp vũ khí: cướp Binh khí
     ActionStealArmor,   // Cướp áo giáp: cướp Áo giáp
+    ActionRepelInvasion,// Đánh đuổi ngoại xâm: chặn sự kiện Giặc cho cả nhóm
 
     // ── Events ─────────────────────────────────────
     EventDrought,       // Hạn hán: -3 stamina tất cả

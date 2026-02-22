@@ -16,7 +16,7 @@ MonoBehaviour:
   cardType: 1
   effectType: 10
   artwork: {fileID: -2080999915245579132, guid: 84ce7283a0aec9b4c994e091fac72782, type: 3}
-  description: "M\u1EDDi th\u1EA7y b\xF9a, di\u1EC7t tr\u1EEB O\xE1n linh ho\u1EB7c
-    khi\u1EBFn O\xE1n linh \xE1m ng\u01B0\u1EDDi ch\u01A1i kh\xE1c."
+  description: "Di\u1EC7t tr\u1EEB O\xE1n linh ho\u1EB7c chuy\u1EC3n O\xE1n linh
+    sang ng\u01B0\u1EDDi ch\u01A1i kh\xE1c."
   staminaCost: 1
-  count: 2
+  count: 5

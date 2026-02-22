@@ -17,7 +17,7 @@ MonoBehaviour:
   effectType: 8
   artwork: {fileID: 5762956260952015928, guid: ef9537104eaec904eb1874d3cfb1aec5, type: 3}
   description: "Ch\u1ECDn 1 ng\u01B0\u1EDDi ch\u01A1i \u0111\u1EC3 h\u1EA1 \u0111\u1ED9c;
-    ng\u01B0\u1EDDi \u0111\xF3 gi\u1EA3m 1 Kh\xED huy\u1EBFt li\xEAn t\u1EE5c 3 v\xF2ng
-    k\u1EC3 t\u1EEB v\xF2ng sau."
+    ng\u01B0\u1EDDi \u0111\xF3 gi\u1EA3m 1 Kh\xED huy\u1EBFt m\u1ED7i v\xF2ng trong
+    3 v\xF2ng."
   staminaCost: 2
-  count: 2
+  count: 3

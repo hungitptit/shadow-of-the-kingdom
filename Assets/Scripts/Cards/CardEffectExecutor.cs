@@ -42,9 +42,10 @@ public static class CardEffectExecutor
             CardEffectType.ActionFortune      => ActionFortune(owner),
             CardEffectType.ActionCounter      => ActionCounter(owner),
             CardEffectType.ActionCurse        => ActionCurse(owner),
-            CardEffectType.ActionStealWeapon  => ActionStealWeapon(owner),
-            CardEffectType.ActionStealArmor   => ActionStealArmor(owner),
-            CardEffectType.EventDrought       => EventDrought(),
+            CardEffectType.ActionStealWeapon   => ActionStealWeapon(owner),
+            CardEffectType.ActionStealArmor    => ActionStealArmor(owner),
+            CardEffectType.ActionRepelInvasion => ActionRepelInvasion(owner),
+            CardEffectType.EventDrought        => EventDrought(),
             CardEffectType.EventInvasion      => EventInvasion(),
             CardEffectType.EventShareRice     => EventShareRice(owner),
             CardEffectType.EventGoddess       => EventGoddess(owner),
@@ -130,6 +131,25 @@ public static class CardEffectExecutor
     {
         owner.fleeActive = true;
         GM.LogEvent($"{owner.playerName} Chạy giặc — miễn nhiễm Giặc ngoại xâm vòng này.");
+        return true;
+    }
+
+    static bool ActionRepelInvasion(Player owner)
+    {
+        // Đánh đuổi ngoại xâm:
+        //   - Tất cả người còn sống miễn nhiễm Giặc ngoại xâm vòng này (không mất lá bài)
+        //   - Riêng người chơi lá này được thưởng thêm 2 lá bài
+        foreach (Player p in GM.AlivePlayers())
+            p.fleeActive = true;
+
+        int drawn = 0;
+        for (int i = 0; i < 2; i++)
+        {
+            if (owner.hand.Count < Player.MaxHandSize && Deck.DealTo(owner))
+                drawn++;
+        }
+
+        GM.LogEvent($"{owner.playerName} Đánh đuổi ngoại xâm — cả làng miễn nhiễm Giặc vòng này! Bạn rút thêm {drawn} lá.");
         return true;
     }
 

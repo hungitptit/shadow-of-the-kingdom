@@ -16,7 +16,6 @@ MonoBehaviour:
   cardType: 1
   effectType: 11
   artwork: {fileID: 414100524238148940, guid: e4c6574a5fdbdfc4abc54e8f307eeec3, type: 3}
-  description: "M\u1EDDi th\u1EA7y b\xF3i, xem tr\u01B0\u1EDBc 3 l\xE1 b\xE0i tr\xEAn
-    deck."
+  description: "Xem tr\u01B0\u1EDBc 3 l\xE1 b\xE0i tr\xEAn \u0111\u1EC9nh deck."
   staminaCost: 1
-  count: 2
+  count: 5

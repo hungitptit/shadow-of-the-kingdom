@@ -16,7 +16,7 @@ MonoBehaviour:
   cardType: 1
   effectType: 5
   artwork: {fileID: -7923923931746868214, guid: db369a3c3719def428441a8bac045b97, type: 3}
-  description: "Khi c\xF3 s\u1EF1 ki\u1EC7n Gi\u1EB7c ngo\u1EA1i x\xE2m, b\u1EA1n
-    kh\xF4ng b\u1ECB m\u1EA5t l\xE1 b\xE0i n\xE0o."
+  description: "Mi\u1EC5n nhi\u1EC5m s\u1EF1 ki\u1EC7n Gi\u1EB7c ngo\u1EA1i x\xE2m
+    v\xF2ng n\xE0y ch\u1EC9 cho b\u1EA3n th\xE2n."
   staminaCost: 1
-  count: 2
+  count: 1

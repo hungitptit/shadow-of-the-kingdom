@@ -18,4 +18,4 @@ MonoBehaviour:
   artwork: {fileID: 3060757239859792208, guid: 95b71adf8828553439824937fb48ad23, type: 3}
   description: "T\u0103ng 1 \u0111i\u1EC3m Ph\xF2ng th\u1EE7 v\u0129nh vi\u1EC5n."
   staminaCost: 0
-  count: 3
+  count: 10

@@ -16,8 +16,7 @@ MonoBehaviour:
   cardType: 1
   effectType: 13
   artwork: {fileID: -4267799575688986859, guid: ce3c76a8949989b4588ffc54f4489ca0, type: 3}
-  description: "Tri\u1EC7u h\u1ED3i o\xE1n linh, \xE1m 1 ng\u01B0\u1EDDi ch\u01A1i;
-    ng\u01B0\u1EDDi b\u1ECB \xE1m y\u1EBFu \u0111u\u1ED1i, Th\u1EC3 l\u1EF1c t\u1ED1i
-    \u0111a b\u1ECB kh\xF3a \u1EDF 2."
+  description: "\xC1m 1 ng\u01B0\u1EDDi ch\u01A1i; Th\u1EC3 l\u1EF1c t\u1ED1i \u0111a
+    c\u1EE7a ng\u01B0\u1EDDi \u0111\xF3 b\u1ECB kh\xF3a \u1EDF 2."
   staminaCost: 1
   count: 2

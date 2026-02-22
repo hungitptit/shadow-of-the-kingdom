@@ -16,7 +16,7 @@ MonoBehaviour:
   cardType: 1
   effectType: 6
   artwork: {fileID: -4559170973930118357, guid: d5018dfc3e9a1f148a75abfb0212e59e, type: 3}
-  description: "L\xE9n l\xFAt \u0111\u1ED9t nh\u1EADp, l\u1EA5y 1 l\xE1 b\xE0i c\u1EE7a
-    ng\u01B0\u1EDDi ch\u01A1i kh\xE1c."
+  description: "L\xE9n l\xFAt \u0111\u1ED9t nh\u1EADp, l\u1EA5y 1 l\xE1 b\xE0i ng\u1EABu
+    nhi\xEAn c\u1EE7a ng\u01B0\u1EDDi ch\u01A1i kh\xE1c."
   staminaCost: 1
-  count: 2
+  count: 5

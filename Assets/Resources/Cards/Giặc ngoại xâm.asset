@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "Gi\u1EB7c ngo\u1EA1i x\xE2m"
   cardType: 3
-  effectType: 17
+  effectType: 18
   artwork: {fileID: -4353800381534283547, guid: bf5a186c7e6559543abc22c68fd9392f, type: 3}
   description: "Gi\u1EB7c k\xE9o \u0111\u1EBFn c\u01B0\u1EDBp ph\xE1, m\u1ED7i ng\u01B0\u1EDDi
     ch\u01A1i ph\u1EA3i h\u1EE7y 2 l\xE1 b\xE0i b\u1EA5t k\u1EF3."
   staminaCost: 0
-  count: 2
+  count: 3

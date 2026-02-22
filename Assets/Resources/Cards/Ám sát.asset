@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "\xC1m s\xE1t"
   cardType: 2
-  effectType: 20
+  effectType: 21
   artwork: {fileID: -7993098625152051109, guid: 5658cf4089f99544ab6b5d1a5440b151, type: 3}
   description: "\u0110\u1EB7t b\xED m\u1EADt l\xEAn 1 ng\u01B0\u1EDDi ch\u01A1i.
-    K\xEDch ho\u1EA1t v\xE0o v\xF2ng sau b\u1EB1ng 5 Th\u1EC3 l\u1EF1c \u0111\u1EC3
-    h\u1EA1 g\u1EE5c ngay l\u1EADp t\u1EE9c."
+    K\xEDch ho\u1EA1t v\xF2ng sau t\u1ED1n 5 Th\u1EC3 l\u1EF1c \u0111\u1EC3 h\u1EA1
+    g\u1EE5c ngay l\u1EADp t\u1EE9c."
   staminaCost: 0
-  count: 2
+  count: 5

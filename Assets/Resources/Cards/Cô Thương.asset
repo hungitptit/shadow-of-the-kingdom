@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "C\xF4 Th\u01B0\u01A1ng"
   cardType: 3
-  effectType: 19
+  effectType: 20
   artwork: {fileID: -7590590849425503222, guid: 5ba937956369a084aa22dac704ce983e, type: 3}
-  description: "Th\xE1nh m\u1EABu ph\xF9 h\u1ED9, ng\u01B0\u1EDDi r\xFAt l\xE1 b\xE0i
-    n\xE0y \u0111\u01B0\u1EE3c h\u1ED3i ph\u1EE5c to\xE0n b\u1ED9 Kh\xED huy\u1EBFt
-    v\xE0 b\u1ED1c th\xEAm 1 l\xE1."
+  description: "Th\xE1nh m\u1EABu ph\xF9 h\u1ED9 \u2014 ng\u01B0\u1EDDi r\xFAt l\xE1
+    n\xE0y h\u1ED3i ph\u1EE5c to\xE0n b\u1ED9 Kh\xED huy\u1EBFt v\xE0 b\u1ED1c th\xEAm
+    1 l\xE1."
   staminaCost: 0
-  count: 2
+  count: 3
