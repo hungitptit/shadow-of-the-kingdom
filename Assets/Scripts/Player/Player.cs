@@ -50,11 +50,14 @@ public class Player
     public List<CardData> hand = new();
     public const int MaxHandSize = 5;
 
-    // HiddenActions placed ON this player by others
+    // Lá secret đặt lên player này (hiện mặt sau trên panel)
     public List<HiddenAction> hiddenActionsOnMe = new();
 
-    // HiddenActions this player has placed (to clean up on death)
+    // Lá secret player này đã đặt (để dọn khi chết)
     public List<HiddenAction> hiddenActionsPlacedByMe = new();
+
+    // Đang được bảo vệ bởi lá Protect (vô hiệu đòn tấn công + ám sát cho đến khi kích hoạt)
+    public bool isProtected = false;
 
     public Player(string name)
     {

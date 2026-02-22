@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      camquan_0: -3261136574480051289
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

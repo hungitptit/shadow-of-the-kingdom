@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      chaygiac_0: -7923923931746868214
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

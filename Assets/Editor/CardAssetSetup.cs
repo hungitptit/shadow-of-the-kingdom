@@ -81,6 +81,14 @@ public static class CardAssetSetup
         ("Cô Thương",            CardType.Event, CardEffectType.EventGoddess,    0, 2,
          "Assets/Sprites/events/cothuong - Copy (2).png",
          "Thánh mẫu phù hộ, người rút lá bài này được hồi phục toàn bộ Khí huyết và bốc thêm 1 lá."),
+
+        // Secret cards (HiddenAction — đặt úp lên người chơi khác)
+        ("Ám sát",  CardType.HiddenAction, CardEffectType.HiddenAssassinate, 0, 2,
+         "Assets/Sprites/secret/amsat - Copy (2).png",
+         "Đặt bí mật lên 1 người chơi. Kích hoạt vào vòng sau bằng 5 Thể lực để hạ gục ngay lập tức."),
+        ("Bảo vệ",  CardType.HiddenAction, CardEffectType.HiddenProtect,     0, 2,
+         "Assets/Sprites/secret/baove - Copy.png",
+         "Đặt bí mật lên 1 người chơi. Người đó được miễn nhiễm mọi đòn tấn công và ám sát cho đến khi lá này bị kích hoạt."),
     };
 
     // ── Menu items ────────────────────────────────────────────────────────────

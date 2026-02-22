@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65120d469c8e2f47a6c594aed2f153a, type: 3}
+  m_Name: "B\u1EA3o v\u1EC7"
+  m_EditorClassIdentifier: 
+  cardName: "B\u1EA3o v\u1EC7"
+  cardType: 2
+  effectType: 21
+  artwork: {fileID: -6125623228075632836, guid: 2ed2977ac0d66c44ea08d1a46b3f97d5, type: 3}
+  description: "\u0110\u1EB7t b\xED m\u1EADt l\xEAn 1 ng\u01B0\u1EDDi ch\u01A1i.
+    Ng\u01B0\u1EDDi \u0111\xF3 \u0111\u01B0\u1EE3c mi\u1EC5n nhi\u1EC5m m\u1ECDi
+    \u0111\xF2n t\u1EA5n c\xF4ng v\xE0 \xE1m s\xE1t cho \u0111\u1EBFn khi l\xE1 n\xE0y
+    b\u1ECB k\xEDch ho\u1EA1t."
+  staminaCost: 0
+  count: 2

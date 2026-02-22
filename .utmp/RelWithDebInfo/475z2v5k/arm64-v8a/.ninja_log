@@ -1,0 +1,12 @@
+# ninja log v5
+73	528	7934343854448794	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	fd82c8f551117532
+530	773	7934343857064431	C:/Users/PC/Shadow of the Kingdom/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/475z2v5k/obj/arm64-v8a/libswappywrapper.so	2103118627118276
+28	1319	7934343862422163	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	64d650c53ae305f0
+44	1372	7934343862874184	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	6cf774ac499688e9
+63	1382	7934343862966716	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	a591d52f42fed822
+20	1387	7934343863028503	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	9d03900eac4b57c9
+52	1466	7934343863940462	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	eab8b3a4c8e35bf3
+1	1544	7934343864738014	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	55c9c13c04f5803e
+36	1713	7934343866434026	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	3fef3a570cc0870e
+9	1835	7934343867642075	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	9b2fac28c59e89c8
+1835	1950	7934343868874109	C:/Users/PC/Shadow of the Kingdom/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/475z2v5k/obj/arm64-v8a/libgame.so	3c51f4ef297047db

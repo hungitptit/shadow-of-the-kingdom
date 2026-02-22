@@ -16,6 +16,7 @@ public static class CardEffectExecutor
     /// </summary>
     public static bool Execute(Player owner, CardData card)
     {
+        // Lá HiddenAction không tốn stamina khi đặt, chỉ cần chọn target
         if (card.cardType == CardType.Action && owner.stamina < card.staminaCost)
         {
             GM.LogEvent($"Không đủ Thể lực (cần {card.staminaCost}).");
@@ -27,27 +28,29 @@ public static class CardEffectExecutor
 
         bool success = card.effectType switch
         {
-            CardEffectType.ItemArmor         => ApplyArmor(owner, card),
-            CardEffectType.ItemWeapon        => ApplyWeapon(owner, card),
-            CardEffectType.ItemPotion        => ApplyPotion(owner, card),
-            CardEffectType.ActionBeg         => ActionBeg(owner),
-            CardEffectType.ActionRevive      => ActionRevive(owner),
-            CardEffectType.ActionFlee        => ActionFlee(owner),
-            CardEffectType.ActionSteal       => ActionSteal(owner),
-            CardEffectType.ActionHeal        => ActionHeal(owner),
-            CardEffectType.ActionPoison      => ActionPoison(owner),
-            CardEffectType.ActionSwapStats   => ActionSwapStats(owner),
-            CardEffectType.ActionExorcism    => ActionExorcism(owner),
-            CardEffectType.ActionFortune     => ActionFortune(owner),
-            CardEffectType.ActionCounter     => ActionCounter(owner),
-            CardEffectType.ActionCurse       => ActionCurse(owner),
-            CardEffectType.ActionStealWeapon => ActionStealWeapon(owner),
-            CardEffectType.ActionStealArmor  => ActionStealArmor(owner),
-            CardEffectType.EventDrought      => EventDrought(),
-            CardEffectType.EventInvasion     => EventInvasion(),
-            CardEffectType.EventShareRice    => EventShareRice(owner),
-            CardEffectType.EventGoddess      => EventGoddess(owner),
-            _                                => false
+            CardEffectType.ItemArmor          => ApplyArmor(owner, card),
+            CardEffectType.ItemWeapon         => ApplyWeapon(owner, card),
+            CardEffectType.ItemPotion         => ApplyPotion(owner, card),
+            CardEffectType.ActionBeg          => ActionBeg(owner),
+            CardEffectType.ActionRevive       => ActionRevive(owner),
+            CardEffectType.ActionFlee         => ActionFlee(owner),
+            CardEffectType.ActionSteal        => ActionSteal(owner),
+            CardEffectType.ActionHeal         => ActionHeal(owner),
+            CardEffectType.ActionPoison       => ActionPoison(owner),
+            CardEffectType.ActionSwapStats    => ActionSwapStats(owner),
+            CardEffectType.ActionExorcism     => ActionExorcism(owner),
+            CardEffectType.ActionFortune      => ActionFortune(owner),
+            CardEffectType.ActionCounter      => ActionCounter(owner),
+            CardEffectType.ActionCurse        => ActionCurse(owner),
+            CardEffectType.ActionStealWeapon  => ActionStealWeapon(owner),
+            CardEffectType.ActionStealArmor   => ActionStealArmor(owner),
+            CardEffectType.EventDrought       => EventDrought(),
+            CardEffectType.EventInvasion      => EventInvasion(),
+            CardEffectType.EventShareRice     => EventShareRice(owner),
+            CardEffectType.EventGoddess       => EventGoddess(owner),
+            CardEffectType.HiddenAssassinate  => PlaceAssassinate(owner, card),
+            CardEffectType.HiddenProtect      => PlaceProtect(owner, card),
+            _                                 => false
         };
 
         if (!success && card.cardType == CardType.Action)
@@ -342,6 +345,29 @@ public static class CardEffectExecutor
         owner.hp = owner.baseHp;
         Deck.DealTo(owner);
         GM.LogEvent($"{owner.playerName} Cô Thương phù hộ — hồi phục toàn bộ Khí huyết + bốc 1 lá!");
+        return true;
+    }
+
+    // ── SECRET CARDS ─────────────────────────────────────────────
+
+    static bool PlaceAssassinate(Player owner, CardData card)
+    {
+        Player target = GetTarget();
+        if (target == null) return false;
+        if (target == owner)
+        {
+            GM.LogEvent("Không thể đặt Ám sát lên bản thân.");
+            return false;
+        }
+        GM.PlaceSecretCard(owner, target, SecretType.Assassinate, card.artwork);
+        return true;
+    }
+
+    static bool PlaceProtect(Player owner, CardData card)
+    {
+        Player target = GetTarget();
+        if (target == null) return false;
+        GM.PlaceSecretCard(owner, target, SecretType.Protect, card.artwork);
         return true;
     }
 

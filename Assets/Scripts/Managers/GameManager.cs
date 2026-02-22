@@ -377,6 +377,15 @@ public class GameManager : MonoBehaviour
         int damage = attacker.attack - target.defense;
         if (damage < 0) damage = 0;
 
+        // Bảo vệ bí mật: lá Protect chặn hoàn toàn đòn tấn công
+        if (target.isProtected)
+        {
+            RemoveProtect(target);
+            LogEvent($"{attacker.playerName} tấn công {target.playerName} — Bảo vệ bí mật kích hoạt, đòn bị chặn!");
+            RefreshAll();
+            return;
+        }
+
         // RedDevil immunity: ignore first attack each round if revealed
         if (target.isRevealed && target.role?.roleType == RoleType.RedDevil
             && !target.redDevilImmunityUsedThisRound)
@@ -399,34 +408,36 @@ public class GameManager : MonoBehaviour
     }
 
     // ─────────────────────────────────────────────
-    // HIDDEN ACTION
+    // SECRET CARDS (Ám sát / Bảo vệ)
     // ─────────────────────────────────────────────
 
-    public void PlaceHiddenAction()
+    /// <summary>
+    /// Đặt lá secret (Assassinate hoặc Protect) lên target.
+    /// Được gọi từ CardEffectExecutor khi chơi lá HiddenAction từ tay.
+    /// </summary>
+    public void PlaceSecretCard(Player owner, Player target, SecretType type, UnityEngine.Sprite artwork)
     {
-        if (gamePhase != GamePhase.Playing) return;
-        if (selectedTargetIndex == -1) return;
-
-        Player owner = CurrentPlayer();
-        Player target = players[selectedTargetIndex];
-
-        if (!owner.isAlive || !target.isAlive) return;
-        if (owner.hasUsedActionThisTurn)
-        {
-            LogEvent("Đã dùng hành động trong lượt này.");
-            return;
-        }
-
-        HiddenAction action = new HiddenAction(owner, target, currentRound);
+        var action = new HiddenAction(owner, target, currentRound, type, artwork);
         target.hiddenActionsOnMe.Add(action);
         owner.hiddenActionsPlacedByMe.Add(action);
-        owner.hasUsedActionThisTurn = true;
 
-        LogEvent($"{owner.playerName} đặt Ám sát ẩn lên {target.playerName}.");
+        if (type == SecretType.Protect)
+        {
+            target.isProtected = true;
+            LogEvent($"{owner.playerName} đặt Bảo vệ bí mật lên {target.playerName}.");
+        }
+        else
+        {
+            LogEvent($"{owner.playerName} đặt Ám sát bí mật lên {target.playerName}.");
+        }
         RefreshAll();
     }
 
-    public void ActivateHiddenAction()
+    /// <summary>
+    /// Kích hoạt lá Ám sát đã đặt lên target (tốn 5 ST, phải qua 1 vòng).
+    /// Human gọi bằng nút ActivateSecret trên UI.
+    /// </summary>
+    public void ActivateSecretCard()
     {
         if (gamePhase != GamePhase.Playing) return;
         if (selectedTargetIndex == -1) return;
@@ -434,13 +445,14 @@ public class GameManager : MonoBehaviour
         Player activator = CurrentPlayer();
         Player target = players[selectedTargetIndex];
 
-        // Find a hidden action placed by activator on target that is eligible
         HiddenAction action = target.hiddenActionsOnMe.FirstOrDefault(a =>
-            a.owner == activator && currentRound > a.placedRound);
+            a.owner == activator &&
+            a.secretType == SecretType.Assassinate &&
+            currentRound > a.placedRound);
 
         if (action == null)
         {
-            LogEvent("Không có Hành động Ẩn hợp lệ để kích hoạt.");
+            LogEvent("Không có Ám sát bí mật hợp lệ để kích hoạt.");
             return;
         }
         if (activator.stamina < 5)
@@ -450,12 +462,60 @@ public class GameManager : MonoBehaviour
         }
 
         activator.stamina -= 5;
-        target.hiddenActionsOnMe.Remove(action);
-        activator.hiddenActionsPlacedByMe.Remove(action);
+        RemoveSecret(target, action);
 
-        LogEvent($"{activator.playerName} kích hoạt Ám sát ẩn lên {target.playerName}!");
+        // Lá Protect chặn cả Ám sát
+        if (target.isProtected)
+        {
+            RemoveProtect(target);
+            LogEvent($"{activator.playerName} kích hoạt Ám sát lên {target.playerName} — Bảo vệ bí mật chặn lại!");
+            RefreshAll();
+            return;
+        }
+
+        LogEvent($"{activator.playerName} kích hoạt Ám sát bí mật — {target.playerName} bị hạ!");
         KillPlayer(target);
         RefreshAll();
+    }
+
+    /// AI version — bypass interactivity check
+    public void AIActivateSecretCard(Player activator, Player target)
+    {
+        HiddenAction action = target.hiddenActionsOnMe.FirstOrDefault(a =>
+            a.owner == activator &&
+            a.secretType == SecretType.Assassinate &&
+            currentRound > a.placedRound);
+
+        if (action == null || activator.stamina < 5) return;
+
+        activator.stamina -= 5;
+        RemoveSecret(target, action);
+
+        if (target.isProtected)
+        {
+            RemoveProtect(target);
+            LogEvent($"{activator.playerName} kích hoạt Ám sát lên {target.playerName} — Bảo vệ bí mật chặn lại!");
+            RefreshAll();
+            return;
+        }
+
+        LogEvent($"{activator.playerName} kích hoạt Ám sát bí mật — {target.playerName} bị hạ!");
+        KillPlayer(target);
+        RefreshAll();
+    }
+
+    void RemoveSecret(Player target, HiddenAction action)
+    {
+        target.hiddenActionsOnMe.Remove(action);
+        action.owner.hiddenActionsPlacedByMe.Remove(action);
+    }
+
+    void RemoveProtect(Player target)
+    {
+        HiddenAction protect = target.hiddenActionsOnMe.FirstOrDefault(
+            a => a.secretType == SecretType.Protect);
+        if (protect != null) RemoveSecret(target, protect);
+        target.isProtected = false;
     }
 
     // ─────────────────────────────────────────────
@@ -487,12 +547,25 @@ public class GameManager : MonoBehaviour
 
         LogEvent($"{p.playerName} bị hạ! Vai trò: {GetRoleName(p.role.roleType)}");
 
-        // Clean up hidden actions placed by this player
+        // Dọn lá secret player này đã đặt lên người khác
         foreach (HiddenAction a in p.hiddenActionsPlacedByMe.ToList())
         {
             a.target.hiddenActionsOnMe.Remove(a);
+            if (a.secretType == SecretType.Protect && a.target.isProtected)
+            {
+                // Kiểm tra còn lá protect khác không
+                bool hasOtherProtect = a.target.hiddenActionsOnMe
+                    .Any(x => x.secretType == SecretType.Protect);
+                if (!hasOtherProtect) a.target.isProtected = false;
+            }
         }
         p.hiddenActionsPlacedByMe.Clear();
+
+        // Dọn lá secret đặt lên player này
+        foreach (HiddenAction a in p.hiddenActionsOnMe.ToList())
+            a.owner.hiddenActionsPlacedByMe.Remove(a);
+        p.hiddenActionsOnMe.Clear();
+        p.isProtected = false;
 
         HandleRevealEffects(p, true);
         CheckWinConditions();

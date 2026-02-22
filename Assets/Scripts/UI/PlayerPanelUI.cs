@@ -18,6 +18,12 @@ public class PlayerPanelUI : MonoBehaviour
     public GameObject deadOverlay;       // dark overlay when player is dead
     public GameObject selectedIndicator; // ring/glow when targeted
 
+    [Header("Secret Cards")]
+    public Sprite cardBackSprite;        // mặt sau lá bài (general.png)
+    // Badge hiện số lá secret đang đặt trên player này
+    public GameObject secretBadge;       // container (Image nền + Text)
+    public TextMeshProUGUI secretCountText;
+
     [Header("Colors")]
     public Color colorDefault = new Color(0.15f, 0.15f, 0.25f, 0.9f);
     public Color colorActive = new Color(0.2f, 0.6f, 0.2f, 1f);
@@ -102,6 +108,18 @@ public class PlayerPanelUI : MonoBehaviour
         // Disable button for dead/self
         if (button != null)
             button.interactable = player.isAlive;
+
+        // Secret card badge — hiện số lá đang đặt trên player này
+        RefreshSecretBadge(player);
+    }
+
+    void RefreshSecretBadge(Player player)
+    {
+        int count = player.hiddenActionsOnMe.Count;
+        if (secretBadge != null)
+            secretBadge.SetActive(count > 0);
+        if (secretCountText != null)
+            secretCountText.text = count > 1 ? count.ToString() : "🂠";
     }
 
     void OnClick()

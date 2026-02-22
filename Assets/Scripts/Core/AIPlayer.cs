@@ -34,14 +34,14 @@ public class AIPlayer
         if (!self.isAlive || gm.gamePhase != GamePhase.Playing)
             yield break;
 
-        // 1. Try to activate a pending hidden action on a high-value target
-        if (TryActivateHiddenAction())
+        // 1. Try to activate a pending secret assassinate on a high-value target
+        if (TryActivateSecretCard())
             yield return new WaitForSeconds(ActionDelay);
 
-        // 2. Try to place a hidden action if no action used yet
+        // 2. Try to play a secret card from hand if no action used yet
         if (!self.hasUsedActionThisTurn)
         {
-            TryPlaceHiddenAction();
+            TryPlaySecretCard();
             yield return new WaitForSeconds(ActionDelay);
         }
 
@@ -79,18 +79,45 @@ public class AIPlayer
 
     // ── AI DECISIONS ──────────────────────────────────────────────
 
-    bool TryActivateHiddenAction()
+    bool TryActivateSecretCard()
     {
         if (self.stamina < 5) return false;
 
-        // Find a target that has our hidden action and is high priority
-        Player target = FindBestHiddenActionTarget();
+        Player target = FindBestAssassinateTarget();
         if (target == null) return false;
 
-        int idx = gm.players.IndexOf(target);
-        gm.SelectTarget(idx);
-        gm.ActivateHiddenAction();
+        gm.AIActivateSecretCard(self, target);
         return true;
+    }
+
+    void TryPlaySecretCard()
+    {
+        // Ưu tiên chơi lá Ám sát nếu có target tốt
+        CardData assassin = self.hand.FirstOrDefault(
+            c => c.effectType == CardEffectType.HiddenAssassinate);
+        if (assassin != null)
+        {
+            Player target = FindBestHiddenPlaceTarget();
+            if (target != null)
+            {
+                gm.SelectTarget(gm.players.IndexOf(target));
+                gm.PlayCard(assassin);
+                return;
+            }
+        }
+
+        // Chơi lá Bảo vệ cho đồng minh hoặc bản thân
+        CardData protect = self.hand.FirstOrDefault(
+            c => c.effectType == CardEffectType.HiddenProtect);
+        if (protect != null)
+        {
+            Player ally = FindBestProtectTarget();
+            if (ally != null)
+            {
+                gm.SelectTarget(gm.players.IndexOf(ally));
+                gm.PlayCard(protect);
+            }
+        }
     }
 
     void TryPlayCard()
@@ -151,23 +178,6 @@ public class AIPlayer
         }
     }
 
-    void TryPlaceHiddenAction()
-    {
-        // Only place if we have enough stamina to activate next round (need 5 later)
-        if (self.stamina < 2) return;
-
-        // Hidden action can target Emperor even when shielded
-        Player target = FindBestHiddenPlaceTarget();
-        if (target == null) return;
-
-        // Don't place hidden on same target we already placed one on
-        bool alreadyPlaced = target.hiddenActionsOnMe.Any(a => a.owner == self);
-        if (alreadyPlaced) return;
-
-        int idx = gm.players.IndexOf(target);
-        gm.SelectTarget(idx);
-        gm.PlaceHiddenAction();
-    }
 
     void TryAttack()
     {
@@ -237,14 +247,26 @@ public class AIPlayer
             .FirstOrDefault();
     }
 
-    Player FindBestHiddenActionTarget()
+    Player FindBestAssassinateTarget()
     {
-        // Find targets who have our hidden action placed and it's been a round
         return gm.players
             .Where(p => p.isAlive && p != self &&
                         p.hiddenActionsOnMe.Any(a =>
-                            a.owner == self && gm.currentRound > a.placedRound))
+                            a.owner == self &&
+                            a.secretType == SecretType.Assassinate &&
+                            gm.currentRound > a.placedRound))
             .OrderByDescending(p => ThreatScore(p, self.role?.faction ?? Faction.Neutral))
+            .FirstOrDefault();
+    }
+
+    Player FindBestProtectTarget()
+    {
+        Faction myFaction = self.role?.faction ?? Faction.Neutral;
+
+        // Bảo vệ đồng minh có HP thấp nhất, hoặc bảo vệ bản thân
+        return gm.AlivePlayers()
+            .Where(p => p.role?.faction == myFaction || p == self)
+            .OrderBy(p => p.hp)
             .FirstOrDefault();
     }
 

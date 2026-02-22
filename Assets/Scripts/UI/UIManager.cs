@@ -28,8 +28,7 @@ public class UIManager : MonoBehaviour
     [Header("Action Buttons")]
     public Button attackButton;
     public Button endTurnButton;
-    public Button placeHiddenButton;
-    public Button activateHiddenButton;
+    public Button activateSecretButton;  // Kích hoạt Ám sát bí mật (5 ST)
     public Button revealRoleButton;
     public Button drawCardButton;
 
@@ -58,10 +57,8 @@ public class UIManager : MonoBehaviour
             attackButton.onClick.AddListener(() => GameManager.Instance.AttackSelected());
         if (endTurnButton != null)
             endTurnButton.onClick.AddListener(() => GameManager.Instance.EndTurn());
-        if (placeHiddenButton != null)
-            placeHiddenButton.onClick.AddListener(() => GameManager.Instance.PlaceHiddenAction());
-        if (activateHiddenButton != null)
-            activateHiddenButton.onClick.AddListener(() => GameManager.Instance.ActivateHiddenAction());
+        if (activateSecretButton != null)
+            activateSecretButton.onClick.AddListener(() => GameManager.Instance.ActivateSecretCard());
         if (revealRoleButton != null)
             revealRoleButton.onClick.AddListener(() => GameManager.Instance.RevealCurrentPlayerRole());
         if (drawCardButton != null)
@@ -169,8 +166,20 @@ public class UIManager : MonoBehaviour
 
         if (attackButton != null)
             attackButton.interactable = isPlaying && isHumanTurn && !player.hasAttackedThisTurn && player.stamina >= 3;
-        if (placeHiddenButton != null)
-            placeHiddenButton.interactable = isPlaying && isHumanTurn && !player.hasUsedActionThisTurn;
+
+        // Kích hoạt ám sát: phải có lá ám sát đặt từ vòng trước, đủ 5 ST
+        if (activateSecretButton != null)
+        {
+            bool hasAssassin = GameManager.Instance.selectedTargetIndex >= 0 &&
+                GameManager.Instance.selectedTargetIndex < GameManager.Instance.players.Count &&
+                GameManager.Instance.players[GameManager.Instance.selectedTargetIndex]
+                    .hiddenActionsOnMe.Exists(a =>
+                        a.owner == player &&
+                        a.secretType == SecretType.Assassinate &&
+                        GameManager.Instance.currentRound > a.placedRound);
+            activateSecretButton.interactable = isPlaying && isHumanTurn && player.stamina >= 5 && hasAssassin;
+        }
+
         if (revealRoleButton != null)
             revealRoleButton.interactable = isPlaying && isHumanTurn && !player.isRevealed;
         if (endTurnButton != null)
