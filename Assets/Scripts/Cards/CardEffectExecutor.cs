@@ -374,11 +374,6 @@ public static class CardEffectExecutor
     {
         Player target = GetTarget();
         if (target == null) return false;
-        if (target == owner)
-        {
-            GM.LogEvent("Không thể đặt Ám sát lên bản thân.");
-            return false;
-        }
         GM.PlaceSecretCard(owner, target, SecretType.Assassinate, card.artwork);
         return true;
     }

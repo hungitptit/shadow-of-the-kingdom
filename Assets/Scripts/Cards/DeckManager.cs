@@ -83,23 +83,71 @@ public class DeckManager : MonoBehaviour
     // ── Player hand helpers ───────────────────────────────────────
 
     /// <summary>
-    /// Give player one card from the top of the deck.
-    /// Enforces max hand size of 5 — returns false if hand is full.
+    /// Give player one non-Event card from the deck.
+    /// If an Event card is drawn it is triggered immediately (via GameManager)
+    /// and another card is drawn in its place — repeats until a non-Event is found or deck empty.
+    /// Returns false if hand is full or deck has no non-Event cards left.
     /// </summary>
     public bool DealTo(Player player)
     {
         if (player.hand.Count >= Player.MaxHandSize) return false;
-        CardData card = DrawOne();
-        if (card == null) return false;
-        player.hand.Add(card);
-        return true;
+
+        int safetyLimit = drawPile.Count + discardPile.Count + 1;
+        while (safetyLimit-- > 0)
+        {
+            CardData card = DrawOne();
+            if (card == null) return false;
+
+            if (card.cardType == CardType.Event)
+            {
+                // Kích hoạt sự kiện ngay lập tức, không vào tay
+                GameManager.Instance?.TriggerEventCard(player, card);
+                Discard(card);
+                // Tiếp tục rút để lấy lá bài thực sự cho tay
+                if (player.hand.Count >= Player.MaxHandSize) return true;
+                continue;
+            }
+
+            player.hand.Add(card);
+            return true;
+        }
+        return false;
     }
 
-    /// <summary>Deal starting hand of 3 cards to player.</summary>
+    /// <summary>
+    /// Deal starting hand of 3 non-Event cards.
+    /// Event cards encountered are silently discarded and skipped — NOT triggered.
+    /// </summary>
     public void DealStartingHand(Player player)
     {
         for (int i = 0; i < 3; i++)
-            DealTo(player);
+            DealOneNonEvent(player);
+    }
+
+    /// <summary>
+    /// Draw one non-Event card directly into player's hand (no event triggering).
+    /// Used only during initial deal.
+    /// </summary>
+    void DealOneNonEvent(Player player)
+    {
+        if (player.hand.Count >= Player.MaxHandSize) return;
+
+        int safetyLimit = drawPile.Count + discardPile.Count + 1;
+        while (safetyLimit-- > 0)
+        {
+            CardData card = DrawOne();
+            if (card == null) return;
+
+            if (card.cardType == CardType.Event)
+            {
+                // Bỏ qua im lặng, đẩy về discard để xáo sau
+                Discard(card);
+                continue;
+            }
+
+            player.hand.Add(card);
+            return;
+        }
     }
 
     /// <summary>

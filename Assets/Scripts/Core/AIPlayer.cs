@@ -64,6 +64,9 @@ public class AIPlayer
         if (!self.hasAttackedThisTurn && self.stamina >= 3)
         {
             TryAttack();
+            // Nếu target human có Bảo vệ, chờ họ chọn xong rồi mới tiếp tục
+            while (gm.isWaitingForHumanInput)
+                yield return null;
             yield return new WaitForSeconds(ActionDelay);
         }
 

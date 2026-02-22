@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 public class UIManager : MonoBehaviour
@@ -44,6 +45,17 @@ public class UIManager : MonoBehaviour
 
     [Header("Target Info")]
     public TextMeshProUGUI targetInfoText;
+
+    [Header("Protect Confirm Overlay")]
+    public GameObject protectConfirmPanel;
+    public Button     protectYesButton;
+    public Button     protectNoButton;
+
+    [Header("Event Notification Overlay")]
+    public GameObject eventNotificationPanel;
+    public Image           eventCardArtImage;
+    public TextMeshProUGUI eventCardNameText;
+    public TextMeshProUGUI eventCardDescText;
 
     [Header("Navigation Buttons")]
     public Button mainMenuButton;
@@ -294,5 +306,76 @@ public class UIManager : MonoBehaviour
 
         if (targetInfoText != null)
             targetInfoText.text = "Chưa chọn mục tiêu";
+    }
+
+    // ── Event Notification ───────────────────────────────────────
+
+    Coroutine _eventNotifCoroutine;
+
+    /// <summary>
+    /// Hiện popup thông báo lá Event bốc được, tự ẩn sau <paramref name="duration"/> giây.
+    /// </summary>
+    public void ShowEventNotification(CardData card, float duration = 2.5f)
+    {
+        if (eventNotificationPanel == null) return;
+
+        if (eventCardNameText != null)
+            eventCardNameText.text = card.cardName;
+
+        if (eventCardDescText != null)
+            eventCardDescText.text = card.description;
+
+        if (eventCardArtImage != null)
+        {
+            eventCardArtImage.sprite = card.artwork;
+            eventCardArtImage.gameObject.SetActive(card.artwork != null);
+        }
+
+        eventNotificationPanel.SetActive(true);
+
+        if (_eventNotifCoroutine != null)
+            StopCoroutine(_eventNotifCoroutine);
+        _eventNotifCoroutine = StartCoroutine(HideEventNotifAfter(duration));
+    }
+
+    IEnumerator HideEventNotifAfter(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (eventNotificationPanel != null)
+            eventNotificationPanel.SetActive(false);
+        _eventNotifCoroutine = null;
+    }
+
+    // ── Protect Confirm ──────────────────────────────────────────
+
+    /// <summary>
+    /// Hiện popup hỏi human target có muốn kích hoạt Bảo vệ bí mật không.
+    /// Gọi callback(true) nếu chọn Kích hoạt, callback(false) nếu Bỏ qua.
+    /// </summary>
+    public void AskProtectConfirm(System.Action<bool> callback)
+    {
+        if (protectConfirmPanel == null)
+        {
+            // Không có UI → tự động kích hoạt
+            callback(true);
+            return;
+        }
+
+        protectConfirmPanel.SetActive(true);
+
+        protectYesButton.onClick.RemoveAllListeners();
+        protectNoButton.onClick.RemoveAllListeners();
+
+        protectYesButton.onClick.AddListener(() =>
+        {
+            protectConfirmPanel.SetActive(false);
+            callback(true);
+        });
+
+        protectNoButton.onClick.AddListener(() =>
+        {
+            protectConfirmPanel.SetActive(false);
+            callback(false);
+        });
     }
 }

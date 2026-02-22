@@ -49,6 +49,9 @@ public class GameManager : MonoBehaviour
     private Dictionary<int, AIPlayer> aiPlayers = new Dictionary<int, AIPlayer>();
     private bool aiTurnRunning = false;
 
+    /// <summary>True khi đang chờ human chọn (vd: popup Bảo vệ). AI coroutine yield cho đến khi false.</summary>
+    public bool isWaitingForHumanInput = false;
+
     public bool IsCurrentPlayerHuman =>
         GameConfig.Mode == GameConfig.GameMode.MultiPlayer ||
         currentPlayerIndex == humanPlayerIndex;
@@ -374,35 +377,57 @@ public class GameManager : MonoBehaviour
         attacker.stamina -= 3;
         attacker.hasAttackedThisTurn = true;
 
-        int damage = attacker.attack - target.defense;
-        if (damage < 0) damage = 0;
+        // Nếu target có Bảo vệ bí mật và target là human → hỏi trước
+        bool targetIsHuman = target == players.ElementAtOrDefault(humanPlayerIndex) ||
+                             GameConfig.Mode == GameConfig.GameMode.MultiPlayer;
 
-        // Bảo vệ bí mật: lá Protect chặn hoàn toàn đòn tấn công
-        if (target.isProtected)
+        if (target.isProtected && targetIsHuman && uiManager != null)
+        {
+            LogEvent($"{attacker.playerName} tấn công {target.playerName}! [{target.playerName}: chọn có dùng Bảo vệ không?]");
+            RefreshAll();
+            isWaitingForHumanInput = true;
+            uiManager.AskProtectConfirm(useProtect =>
+            {
+                isWaitingForHumanInput = false;
+                StartCoroutine(ResolveAttack(attacker, target, useProtect));
+            });
+            return;
+        }
+
+        // AI target hoặc không có Bảo vệ → xử lý ngay
+        StartCoroutine(ResolveAttack(attacker, target, target.isProtected));
+    }
+
+    IEnumerator ResolveAttack(Player attacker, Player target, bool useProtect)
+    {
+        yield return null; // 1 frame để UI cập nhật
+
+        if (useProtect && target.isProtected)
         {
             RemoveProtect(target);
             LogEvent($"{attacker.playerName} tấn công {target.playerName} — Bảo vệ bí mật kích hoạt, đòn bị chặn!");
             RefreshAll();
-            return;
+            yield break;
         }
 
-        // RedDevil immunity: ignore first attack each round if revealed
+        // RedDevil immunity: bỏ qua đòn đánh đầu tiên mỗi vòng
         if (target.isRevealed && target.role?.roleType == RoleType.RedDevil
             && !target.redDevilImmunityUsedThisRound)
         {
             target.redDevilImmunityUsedThisRound = true;
             LogEvent($"{attacker.playerName} tấn công {target.playerName} — Quỷ đỏ miễn nhiễm!");
             RefreshAll();
-            return;
+            yield break;
         }
+
+        int damage = attacker.attack - target.defense;
+        if (damage < 0) damage = 0;
 
         target.hp -= damage;
         LogEvent($"{attacker.playerName} tấn công {target.playerName}: -{damage} HP.");
 
         if (target.hp <= 0)
-        {
             KillPlayer(target);
-        }
 
         RefreshAll();
     }
@@ -422,14 +447,10 @@ public class GameManager : MonoBehaviour
         owner.hiddenActionsPlacedByMe.Add(action);
 
         if (type == SecretType.Protect)
-        {
             target.isProtected = true;
-            LogEvent($"{owner.playerName} đặt Bảo vệ bí mật lên {target.playerName}.");
-        }
-        else
-        {
-            LogEvent($"{owner.playerName} đặt Ám sát bí mật lên {target.playerName}.");
-        }
+
+        string targetLabel = (target == owner) ? "chính mình" : target.playerName;
+        LogEvent($"{owner.playerName} đặt một Hành động bí mật lên {targetLabel}.");
         RefreshAll();
     }
 
@@ -681,6 +702,37 @@ public class GameManager : MonoBehaviour
     }
 
     // ─────────────────────────────────────────────
+    // EVENT CARD — kích hoạt ngay khi bốc
+    // ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Gọi bởi DeckManager khi bốc trúng lá Event.
+    /// Lá được kích hoạt ngay lập tức thay vì vào tay người chơi.
+    /// drawer là người bốc (dùng làm "owner" cho các effect cần chủ thể).
+    /// </summary>
+    public void TriggerEventCard(Player drawer, CardData card)
+    {
+        if (card.cardType != CardType.Event) return;
+
+        LogEvent($"⚡ {drawer.playerName} bốc trúng sự kiện: [{card.cardName}] — kích hoạt ngay!");
+
+        // Hiện popup thông báo UI
+        uiManager?.ShowEventNotification(card);
+
+        // Lưu currentPlayer tạm để CardEffectExecutor dùng đúng owner
+        int savedIndex = currentPlayerIndex;
+        currentPlayerIndex = players.IndexOf(drawer);
+        if (currentPlayerIndex < 0) currentPlayerIndex = savedIndex;
+
+        CardEffectExecutor.Execute(drawer, card);
+
+        currentPlayerIndex = savedIndex;
+
+        CheckWinConditionsPublic();
+        RefreshAll();
+    }
+
+    // ─────────────────────────────────────────────
     // CARD ACTIONS
     // ─────────────────────────────────────────────
 
@@ -702,11 +754,15 @@ public class GameManager : MonoBehaviour
         }
         if (deckManager == null) return;
 
+        int handBefore = p.hand.Count;
         bool drew = deckManager.DealTo(p);
         if (drew)
         {
             p.hasDrawnThisTurn = true;
-            LogEvent($"{p.playerName} bốc 1 lá bài. (còn {deckManager.DrawPileCount} lá)");
+            bool gotCard = p.hand.Count > handBefore;
+            if (gotCard)
+                LogEvent($"{p.playerName} bốc 1 lá bài vào tay. (deck còn {deckManager.DrawPileCount} lá)");
+            // Nếu chỉ bốc event, DealTo vẫn trả true nhưng tay không tăng — event đã log riêng
         }
         else
         {

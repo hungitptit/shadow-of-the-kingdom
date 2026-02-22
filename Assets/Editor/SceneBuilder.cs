@@ -252,6 +252,61 @@ public static class SceneBuilder
         SetAnchored(peekClose, new Vector2(0.4f, 0.30f), new Vector2(0.6f, 0.40f), Vector2.zero, Vector2.zero);
         // Listener is wired at runtime by UIManager.Start()
 
+        // ── Protect Confirm Overlay (hỏi human có muốn kích hoạt Bảo vệ không) ──
+        var protectConfirmGO = CreateImage(canvasGO, "ProtectConfirmPanel", new Color(0f, 0f, 0f, 0.78f));
+        StretchFull(protectConfirmGO);
+        protectConfirmGO.SetActive(false);
+
+        var pcFrame = CreateImage(protectConfirmGO, "ProtectConfirmFrame", new Color(0.10f, 0.07f, 0.20f, 1f));
+        SetAnchored(pcFrame, new Vector2(0.25f, 0.35f), new Vector2(0.75f, 0.68f), Vector2.zero, Vector2.zero);
+        AddOutline(pcFrame, new Color(0.4f, 0.7f, 1f, 1f));
+
+        var pcTitle = CreateTMPText(pcFrame, "ProtectConfirmTitle",
+            "🛡 Bảo vệ bí mật", 22, new Color(0.4f, 0.8f, 1f), TextAlignmentOptions.Center);
+        SetAnchored(pcTitle, new Vector2(0f, 0.72f), new Vector2(1f, 1f), new Vector2(8, 0), new Vector2(-8, 0));
+        pcTitle.GetComponent<TextMeshProUGUI>().fontStyle = FontStyles.Bold;
+
+        var pcMsg = CreateTMPText(pcFrame, "ProtectConfirmMsg",
+            "Bạn đang bị tấn công!\nCó muốn kích hoạt Bảo vệ bí mật để chặn đòn không?",
+            16, TEXT_DIM, TextAlignmentOptions.Center);
+        SetAnchored(pcMsg, new Vector2(0f, 0.30f), new Vector2(1f, 0.72f), new Vector2(10, 0), new Vector2(-10, 0));
+        pcMsg.GetComponent<TextMeshProUGUI>().enableWordWrapping = true;
+
+        var pcYes = CreateButton(pcFrame, "ProtectYesButton", "✔ Kích hoạt", new Color(0.1f, 0.45f, 0.7f));
+        SetAnchored(pcYes, new Vector2(0.08f, 0.05f), new Vector2(0.46f, 0.28f), Vector2.zero, Vector2.zero);
+
+        var pcNo = CreateButton(pcFrame, "ProtectNoButton", "✘ Bỏ qua", new Color(0.4f, 0.15f, 0.15f));
+        SetAnchored(pcNo, new Vector2(0.54f, 0.05f), new Vector2(0.92f, 0.28f), Vector2.zero, Vector2.zero);
+
+        // ── Event Notification Overlay (hiện khi bốc trúng lá Event) ──
+        var eventNotifGO = CreateImage(canvasGO, "EventNotificationPanel", new Color(0f, 0f, 0f, 0.82f));
+        StretchFull(eventNotifGO);
+        eventNotifGO.SetActive(false);
+
+        // Card frame bên trong (giữa màn hình)
+        var evFrame = CreateImage(eventNotifGO, "EventCardFrame", new Color(0.10f, 0.07f, 0.16f, 1f));
+        SetAnchored(evFrame, new Vector2(0.30f, 0.22f), new Vector2(0.70f, 0.82f), Vector2.zero, Vector2.zero);
+        AddOutline(evFrame, new Color(0.9f, 0.55f, 0.1f, 1f));
+
+        // Nhãn "SỰ KIỆN"
+        var evTag = CreateTMPText(evFrame, "EventTag", "⚡ SỰ KIỆN", 18, new Color(0.95f, 0.6f, 0.1f), TextAlignmentOptions.Center);
+        SetAnchored(evTag, new Vector2(0f, 0.86f), new Vector2(1f, 1f), new Vector2(6, 0), new Vector2(-6, 0));
+
+        // Ảnh artwork lá bài
+        var evArtGO = CreateImage(evFrame, "EventCardArt", Color.white);
+        SetAnchored(evArtGO, new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.86f), Vector2.zero, Vector2.zero);
+        evArtGO.GetComponent<Image>().preserveAspect = true;
+
+        // Tên lá bài
+        var evName = CreateTMPText(evFrame, "EventCardName", "Tên sự kiện", 22, TEXT_GOLD, TextAlignmentOptions.Center);
+        SetAnchored(evName, new Vector2(0f, 0.30f), new Vector2(1f, 0.42f), new Vector2(6, 0), new Vector2(-6, 0));
+        evName.GetComponent<TextMeshProUGUI>().fontStyle = FontStyles.Bold;
+
+        // Mô tả
+        var evDesc = CreateTMPText(evFrame, "EventCardDesc", "Mô tả hiệu ứng...", 14, TEXT_DIM, TextAlignmentOptions.Center);
+        SetAnchored(evDesc, new Vector2(0f, 0f), new Vector2(1f, 0.30f), new Vector2(8, 4), new Vector2(-8, -4));
+        evDesc.GetComponent<TextMeshProUGUI>().enableWordWrapping = true;
+
         // ── Game Log Panel (right column, x=79%→100%, y: 0→TOP_Y) ──
         var logPanel = CreateImage(canvasGO, "LogPanel", LOG_BG);
         SetAnchored(logPanel,
@@ -309,6 +364,17 @@ public static class SceneBuilder
             ui.deckCountText     = deckCountTxt.GetComponent<TextMeshProUGUI>();
             ui.peekOverlay       = peekOverlay;
             ui.peekContainer     = peekContainer.transform;
+
+            // Protect confirm overlay
+            ui.protectConfirmPanel = protectConfirmGO;
+            ui.protectYesButton    = pcYes.GetComponent<Button>();
+            ui.protectNoButton     = pcNo.GetComponent<Button>();
+
+            // Event notification overlay
+            ui.eventNotificationPanel = eventNotifGO;
+            ui.eventCardArtImage      = evArtGO.GetComponent<Image>();
+            ui.eventCardNameText      = evName.GetComponent<TextMeshProUGUI>();
+            ui.eventCardDescText      = evDesc.GetComponent<TextMeshProUGUI>();
 
             // Load CardUI prefab if exists
             GameObject cardPrefabAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/CardUI.prefab");
