@@ -50,7 +50,12 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         _card = card;
 
         if (cardNameText != null)    cardNameText.text    = card.cardName;
-        if (descriptionText != null) descriptionText.text = card.description;
+        if (descriptionText != null)
+        {
+            descriptionText.text = card.description;
+            descriptionText.enableWordWrapping = true;
+            descriptionText.overflowMode = TextOverflowModes.Overflow;
+        }
         if (artworkImage != null && card.artwork != null)
         {
             artworkImage.sprite = card.artwork;
@@ -85,6 +90,42 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             btn.onClick.AddListener(OnClick);
         }
 
+        if (selectedGlow != null) selectedGlow.SetActive(false);
+    }
+
+    /// <summary>
+    /// Chỉ hiện artwork (bài trên tay). Click để xem preview với mô tả đầy đủ.
+    /// </summary>
+    public void SetupArtworkOnly(CardData card)
+    {
+        _card = card;
+
+        if (cardNameText != null) cardNameText.gameObject.SetActive(false);
+        if (descriptionText != null) descriptionText.gameObject.SetActive(false);
+        if (costText != null) costText.transform.parent.gameObject.SetActive(false);
+        if (typeColorBar != null) typeColorBar.gameObject.SetActive(false);
+        var typeLabelGO = transform.Find("TypeLabel");
+        if (typeLabelGO != null) typeLabelGO.gameObject.SetActive(false);
+
+        if (artworkImage != null)
+        {
+            artworkImage.sprite = card?.artwork;
+            artworkImage.color = Color.white;
+            artworkImage.preserveAspect = false;
+            var rt = artworkImage.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        Button btn = GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(OnClick);
+            btn.interactable = true;
+        }
         if (selectedGlow != null) selectedGlow.SetActive(false);
     }
 

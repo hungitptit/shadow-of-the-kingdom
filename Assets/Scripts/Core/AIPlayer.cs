@@ -45,12 +45,16 @@ public class AIPlayer
             yield return new WaitForSeconds(ActionDelay);
         }
 
-        // 3. Draw a card if haven't yet and hand is not full
-        if (!self.hasDrawnThisTurn && self.hand.Count < Player.MaxHandSize && DeckManager.Instance != null)
+        // 3. Bốc bài (tối đa 2 lá/lượt)
+        if (DeckManager.Instance != null)
         {
-            DeckManager.Instance.DealTo(self);
-            self.hasDrawnThisTurn = true;
-            yield return new WaitForSeconds(ActionDelay * 0.5f);
+            for (int i = 0; i < 2; i++)
+            {
+                if (self.cardsDrawnThisTurn >= 2 || self.hand.Count >= Player.MaxHandSize) break;
+                DeckManager.Instance.DealTo(self);
+                self.cardsDrawnThisTurn++;
+                yield return new WaitForSeconds(ActionDelay * 0.4f);
+            }
         }
 
         // 4. Play a card from hand if useful

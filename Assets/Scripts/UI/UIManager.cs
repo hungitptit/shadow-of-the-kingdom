@@ -213,7 +213,8 @@ public class UIManager : MonoBehaviour
         if (endTurnButton != null)
             endTurnButton.interactable = isPlaying && isHumanTurn;
         if (drawCardButton != null)
-            drawCardButton.interactable = isPlaying && isHumanTurn && !player.hasDrawnThisTurn
+            drawCardButton.interactable = isPlaying && isHumanTurn
+                                          && player.cardsDrawnThisTurn < 2
                                           && player.hand.Count < Player.MaxHandSize;
 
         // Refresh hand display
@@ -236,14 +237,38 @@ public class UIManager : MonoBehaviour
         // Current player là AI hoặc người khác → hiện mặt sau.
         bool isHumanOwner = GameManager.Instance.IsCurrentPlayerHuman;
 
+        const float cellW = 120f, cellH = 180f;  // tỉ lệ 2:3
+
         foreach (CardData card in player.hand)
         {
-            GameObject go = Object.Instantiate(cardUIPrefab, handContainer);
+            var wrapper = new GameObject("CardWrapper");
+            wrapper.transform.SetParent(handContainer, false);
+            var wrapperRT = wrapper.AddComponent<RectTransform>();
+            var le = wrapper.AddComponent<LayoutElement>();
+            le.minWidth = le.preferredWidth  = cellW;
+            le.minHeight = le.preferredHeight = cellH;
+            le.flexibleWidth = le.flexibleHeight = 0f;
+
+            GameObject go = Object.Instantiate(cardUIPrefab, wrapper.transform);
             CardUI ui = go.GetComponent<CardUI>();
             if (ui == null) continue;
 
+            var cardRT = go.GetComponent<RectTransform>();
+            if (cardRT != null)
+            {
+                cardRT.anchorMin = Vector2.zero;
+                cardRT.anchorMax = Vector2.one;
+                cardRT.offsetMin = Vector2.zero;
+                cardRT.offsetMax = Vector2.zero;
+                cardRT.localScale = new Vector3(1.6f, 1.7f, 1f);
+            }
+
+            // Tắt LayoutElement trên card nếu có (tránh làm lệch grid)
+            var cardLE = go.GetComponent<LayoutElement>();
+            if (cardLE != null) cardLE.ignoreLayout = true;
+
             if (isHumanOwner)
-                ui.Setup(card);
+                ui.SetupArtworkOnly(card);
             else
                 ui.SetupFaceDown(GetCardBack());
         }

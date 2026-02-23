@@ -37,8 +37,8 @@ public class Player
     public bool hasAttackedThisTurn = false;
     // Has this player taken their action card this turn?
     public bool hasUsedActionThisTurn = false;
-    // Has this player drawn a card this turn?
-    public bool hasDrawnThisTurn = false;
+    // Số lá đã bốc trong lượt này (tối đa 2/lượt)
+    public int cardsDrawnThisTurn = 0;
 
     // RedDevil: becomes immune to first attack each round after reveal
     public bool redDevilImmunityUsedThisRound = false;
@@ -46,9 +46,9 @@ public class Player
     // Guard: can only intervene once per game
     public bool guardHasIntervened = false;
 
-    // Card hand (max 5)
+    // Card hand (max 7)
     public List<CardData> hand = new();
-    public const int MaxHandSize = 5;
+    public const int MaxHandSize = 7;
 
     // Lá secret đặt lên player này (hiện mặt sau trên panel)
     public List<HiddenAction> hiddenActionsOnMe = new();
@@ -92,6 +92,6 @@ public class Player
     {
         hasAttackedThisTurn = false;
         hasUsedActionThisTurn = false;
-        hasDrawnThisTurn = false;
+        cardsDrawnThisTurn = 0;
     }
 }

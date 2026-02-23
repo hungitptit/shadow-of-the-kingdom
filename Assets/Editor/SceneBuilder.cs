@@ -71,19 +71,17 @@ public static class SceneBuilder
         // TopBar:            y 0.95 → 1.00  (5%)
         // Left column:       x 0.00 → 0.14  (14%)
         //   InfoPanel:       y 0.30 → 0.95  (65%)
-        //   ButtonPanel:     y 0.00 → 0.30  (30%)
+        //   ButtonPanel:     y 0.00 → 0.30  (30%) — gồm nút Bốc bài
         // Center column:     x 0.14 → 0.79  (65%)
-        //   DeckArea:        y 0.74 → 0.95  (21%)
-        //   HandArea:        y 0.30 → 0.74  (44%)
-        //   PlayerPanels:    y 0.00 → 0.30  (30%)
+        //   HandArea:        y 0.22 → 0.95  (73% — tăng chiều cao cho grid 2 hàng)
+        //   PlayerPanels:    y 0.00 → 0.22  (22%)
         // Right column:      x 0.79 → 1.00  (21%)
         //   LogPanel:        y 0.00 → 0.95  (full)
 
         const float LEFT_X   = 0.14f;
         const float RIGHT_X  = 0.79f;
         const float TOP_Y    = 0.95f;
-        const float DECK_Y   = 0.74f;
-        const float HAND_Y   = 0.30f;
+        const float HAND_Y   = 0.22f;
         const float BTN_Y    = 0.30f;
         const float PAD      = 4f;
 
@@ -146,74 +144,48 @@ public static class SceneBuilder
         var targetInfoTxt = CreateTMPText(btnPanel, "TargetInfoText", "Chưa chọn mục tiêu", 12, TEXT_DIM, TextAlignmentOptions.Center);
         SetAnchored(targetInfoTxt, new Vector2(0f, 0.82f), new Vector2(1f, 1f), new Vector2(4, 0), new Vector2(-4, 0));
 
-        // 4 nút đều nhau, rows từ dưới lên
+        // 5 nút đều nhau (thêm Bốc bài)
+        var btnDraw = CreateButton(btnPanel, "DrawCardButton", "Bốc bài", new Color(0.1f, 0.4f, 0.55f));
+        SetAnchored(btnDraw, new Vector2(0.04f, 0.695f), new Vector2(0.96f, 0.815f), Vector2.zero, Vector2.zero);
+
         var btnReveal = CreateButton(btnPanel, "RevealRoleButton", "Công khai Vai trò", BTN_REVEAL);
-        SetAnchored(btnReveal, new Vector2(0.04f, 0.615f), new Vector2(0.96f, 0.815f), Vector2.zero, Vector2.zero);
+        SetAnchored(btnReveal, new Vector2(0.04f, 0.555f), new Vector2(0.96f, 0.675f), Vector2.zero, Vector2.zero);
 
         var btnAttack = CreateButton(btnPanel, "AttackButton", "Đòn đánh (3 ST)", BTN_ATTACK);
-        SetAnchored(btnAttack, new Vector2(0.04f, 0.41f), new Vector2(0.96f, 0.61f), Vector2.zero, Vector2.zero);
+        SetAnchored(btnAttack, new Vector2(0.04f, 0.415f), new Vector2(0.96f, 0.535f), Vector2.zero, Vector2.zero);
 
         var btnActivate = CreateButton(btnPanel, "ActivateSecretButton", "Kích hoạt Ám sát (5 ST)", BTN_ACTIVATE);
-        SetAnchored(btnActivate, new Vector2(0.04f, 0.205f), new Vector2(0.96f, 0.405f), Vector2.zero, Vector2.zero);
+        SetAnchored(btnActivate, new Vector2(0.04f, 0.275f), new Vector2(0.96f, 0.395f), Vector2.zero, Vector2.zero);
 
         var btnEnd = CreateButton(btnPanel, "EndTurnButton", "Kết thúc lượt", BTN_ENDTURN);
-        SetAnchored(btnEnd, new Vector2(0.04f, 0.01f), new Vector2(0.96f, 0.20f), Vector2.zero, Vector2.zero);
+        SetAnchored(btnEnd, new Vector2(0.04f, 0.01f), new Vector2(0.96f, 0.255f), Vector2.zero, Vector2.zero);
 
-        // ── Deck / Discard / Draw (center, y: DECK_Y → TOP_Y) ────
-        var deckArea = CreateImage(canvasGO, "DeckArea", PANEL_BG);
-        SetAnchored(deckArea,
-            new Vector2(LEFT_X, DECK_Y), new Vector2(RIGHT_X, TOP_Y),
-            new Vector2(PAD, PAD), new Vector2(-PAD, -PAD));
-        AddOutline(deckArea, PANEL_BORDER);
-
-        // DeckArea uses HorizontalLayoutGroup for 3 sections
-        var deckHLG = deckArea.AddComponent<HorizontalLayoutGroup>();
-        deckHLG.childForceExpandWidth  = true;
-        deckHLG.childForceExpandHeight = true;
-        deckHLG.spacing  = 8;
-        deckHLG.padding  = new RectOffset(8, 8, 6, 6);
-
-        var deckPile = CreateImage(deckArea, "DeckPile", new Color(0.15f, 0.10f, 0.04f));
-        AddOutline(deckPile, new Color(0.6f, 0.45f, 0.15f));
-        var deckLE = deckPile.AddComponent<LayoutElement>();
-        deckLE.flexibleWidth = 1f;
-        var deckLabel = CreateTMPText(deckPile, "DeckLabel", "Bộ bài\n(Sấp)", 13, TEXT_GOLD, TextAlignmentOptions.Center);
-        SetAnchored(deckLabel, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-
-        var btnDraw = CreateButton(deckArea, "DrawCardButton", "Bốc bài", new Color(0.1f, 0.4f, 0.55f));
-        var drawLE = btnDraw.AddComponent<LayoutElement>();
-        drawLE.flexibleWidth = 1.4f;
-
-        var discardPile = CreateImage(deckArea, "DiscardPile", new Color(0.12f, 0.05f, 0.05f));
-        AddOutline(discardPile, new Color(0.5f, 0.2f, 0.1f));
-        var discardLE = discardPile.AddComponent<LayoutElement>();
-        discardLE.flexibleWidth = 1f;
-        var discardLabel = CreateTMPText(discardPile, "DiscardLabel", "Bài\nBỏ ra", 13, TEXT_DIM, TextAlignmentOptions.Center);
-        SetAnchored(discardLabel, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-
-        // ── Hand Area (center, y: HAND_Y → DECK_Y) ───────────────
+        // ── Hand Area (center, full height y: HAND_Y → TOP_Y) ────
         var handArea = CreateImage(canvasGO, "HandArea", new Color(0.05f, 0.08f, 0.06f, 0.92f));
         SetAnchored(handArea,
-            new Vector2(LEFT_X, HAND_Y), new Vector2(RIGHT_X, DECK_Y),
+            new Vector2(LEFT_X, HAND_Y), new Vector2(RIGHT_X, TOP_Y),
             new Vector2(PAD, PAD), new Vector2(-PAD, -PAD));
         AddOutline(handArea, PANEL_BORDER);
 
-        var handTitle = CreateTMPText(handArea, "HandTitle", "Bài trên Tay", 15, TEXT_GOLD, TextAlignmentOptions.Left);
-        SetAnchored(handTitle, new Vector2(0f, 0.88f), new Vector2(0.5f, 1f), new Vector2(10, 0), Vector2.zero);
+        var handTitle = CreateTMPText(handArea, "HandTitle", "Bài trên Tay", 14, TEXT_GOLD, TextAlignmentOptions.Left);
+        SetAnchored(handTitle, new Vector2(0f, 0.93f), new Vector2(0.5f, 1f), new Vector2(8, 0), Vector2.zero);
 
-        var deckCountTxt = CreateTMPText(handArea, "DeckCountText", "Deck: 0", 14, TEXT_DIM, TextAlignmentOptions.Right);
-        SetAnchored(deckCountTxt, new Vector2(0.5f, 0.88f), new Vector2(1f, 1f), Vector2.zero, new Vector2(-10, 0));
+        var deckCountTxt = CreateTMPText(handArea, "DeckCountText", "Deck: 0", 13, TEXT_DIM, TextAlignmentOptions.Right);
+        SetAnchored(deckCountTxt, new Vector2(0.5f, 0.93f), new Vector2(1f, 1f), Vector2.zero, new Vector2(-8, 0));
 
         var handContainer = new GameObject("HandContainer");
         handContainer.transform.SetParent(handArea.transform, false);
         handContainer.AddComponent<RectTransform>();
-        SetAnchored(handContainer, Vector2.zero, new Vector2(1f, 0.87f), new Vector2(8, 4), new Vector2(-8, -4));
-        var handHLG = handContainer.AddComponent<HorizontalLayoutGroup>();
-        handHLG.spacing            = 8;
-        handHLG.childForceExpandWidth  = true;
-        handHLG.childForceExpandHeight = true;
-        handHLG.childAlignment     = TextAnchor.MiddleCenter;
-        handHLG.padding            = new RectOffset(6, 6, 4, 4);
+        SetAnchored(handContainer, new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.92f), new Vector2(6, 4), new Vector2(-6, -4));
+        var handGrid = handContainer.AddComponent<GridLayoutGroup>();
+        handGrid.constraint    = GridLayoutGroup.Constraint.FixedColumnCount;
+        handGrid.constraintCount = 4;
+        handGrid.cellSize       = new Vector2(120, 180);  // tỉ lệ 2:3 (chuẩn lá bài)
+        handGrid.spacing        = new Vector2(124, 158);
+        handGrid.startCorner    = GridLayoutGroup.Corner.UpperLeft;
+        handGrid.startAxis      = GridLayoutGroup.Axis.Horizontal;
+        handGrid.childAlignment = TextAnchor.MiddleCenter;
+        handGrid.padding       = new RectOffset(6, 6, 4, 4);
 
         // ── Player Panels (center, y: 0 → HAND_Y) ────────────────
         var panelContainer = new GameObject("PlayerPanelContainer");

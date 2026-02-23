@@ -742,14 +742,14 @@ public class GameManager : MonoBehaviour
         if (!IsCurrentPlayerHuman) return;
 
         Player p = CurrentPlayer();
-        if (p.hasDrawnThisTurn)
+        if (p.cardsDrawnThisTurn >= 2)
         {
-            LogEvent("Đã bốc bài trong lượt này.");
+            LogEvent("Đã bốc tối đa 2 lá trong lượt này.");
             return;
         }
         if (p.hand.Count >= Player.MaxHandSize)
         {
-            LogEvent("Tay bài đầy (tối đa 5 lá).");
+            LogEvent($"Tay bài đầy (tối đa {Player.MaxHandSize} lá).");
             return;
         }
         if (deckManager == null) return;
@@ -758,11 +758,10 @@ public class GameManager : MonoBehaviour
         bool drew = deckManager.DealTo(p);
         if (drew)
         {
-            p.hasDrawnThisTurn = true;
+            p.cardsDrawnThisTurn++;
             bool gotCard = p.hand.Count > handBefore;
             if (gotCard)
-                LogEvent($"{p.playerName} bốc 1 lá bài vào tay. (deck còn {deckManager.DrawPileCount} lá)");
-            // Nếu chỉ bốc event, DealTo vẫn trả true nhưng tay không tăng — event đã log riêng
+                LogEvent($"{p.playerName} bốc 1 lá. (còn {2 - p.cardsDrawnThisTurn} lần bốc/lượt, deck: {deckManager.DrawPileCount})");
         }
         else
         {
